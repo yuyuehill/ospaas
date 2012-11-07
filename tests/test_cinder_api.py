@@ -46,3 +46,4 @@ class  TestClinder(unittest.TestCase):
         print "added from master"
         print "add a new line from master"
         print "add a second line from master"
+        print "add from branch"
