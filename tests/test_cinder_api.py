@@ -10,11 +10,14 @@ import unittest
 import commands
 
 class  TestClinder(unittest.TestCase): 
-    def _setUp(self):
-        url = "http://hillopen:5000"
-        user =  "admin"
+    def setUp(self):
+        url = "hillopen:5000"
+        user="admin"
         password = "admin_pass"
-        params = '{"passwordCredentials":{"username":user,"password":password}}'
+        params = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"}}}' %(user,password)
+        
+        
+        
         headers= {"Content-Type":"application/json"}
         self.conn = httplib.HTTPConnection(url)
      
@@ -25,18 +28,9 @@ class  TestClinder(unittest.TestCase):
         dd = json.loads(data)
         self.conn.close()
         
-        apitoken = dd['auth']['token']['id']
+        apitoken = dd['access']['token']['id']
         print "You token is %s" % apitoken
-    
-    def test_keystone_validation(self):
-        
-        url = "http://hillopen:5000/v2.0/tokens"
-        data = '{"passwordCredentials":{"username":"admin","password":"password"}}'
-        
-        command = "curl -d \'%s\' -H \"Content-Type: application/json\" %s "  % (data, url)
-        print command        
-        print commands.getoutput(command)
-        
+   
             
     def test_cinder_create_volume(self):
         abc = "hill"
