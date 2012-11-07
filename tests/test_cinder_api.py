@@ -43,3 +43,4 @@ class  TestClinder(unittest.TestCase):
         aa = '{"I am here" :abc}'  
         print   aa
         print " create volume"
+        print "added from master"
