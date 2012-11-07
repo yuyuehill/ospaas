@@ -44,3 +44,4 @@ class  TestClinder(unittest.TestCase):
         print   aa
         print " create volume"
         print "added from master"
+        print "add a new line from master"
