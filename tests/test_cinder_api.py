@@ -42,5 +42,5 @@ class  TestClinder(unittest.TestCase):
         abc = "hill"
         aa = '{"I am here" :abc}'  
         print   aa
-        print " create volume" 
-        print "add a new line"
+        print " create volume"
+        print "added from master"
