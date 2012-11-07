@@ -30,7 +30,7 @@ class  TestClinder(unittest.TestCase):
     
     def test_keystone_validation(self):
         
-        url = "http://localhost:5000/v2.0/tokens"
+        url = "http://hillopen:5000/v2.0/tokens"
         data = '{"passwordCredentials":{"username":"admin","password":"password"}}'
         
         command = "curl -d \'%s\' -H \"Content-Type: application/json\" %s "  % (data, url)
