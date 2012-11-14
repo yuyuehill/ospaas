@@ -51,9 +51,10 @@ class  TestClinder(unittest.TestCase):
         
         cinder_conn =  httplib.HTTPConnection(netloc)
         headers = {"Content-Type":"application/json","x-auth-token":self.apitoken}
+        print headers,method,rootpath + path
+        cinder_conn.request(method,rootpath + path, params, headers)
         
-        cinder_conn.request(method,rootpath + path, headers)
-        response = self.conn.getresponse()
+        response = cinder_conn.getresponse()
         
         data = response.read()
         
