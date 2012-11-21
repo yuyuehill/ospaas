@@ -12,7 +12,7 @@ class MyClass(object):
     '''
 
 
-    def __init__(selfparams):
+    def __init__(self):
         '''
         Constructor
         '''
