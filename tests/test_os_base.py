@@ -12,19 +12,22 @@ import json
 import unittest
 import urlparse
 
+localenv = {'url':'localhost:5000', 'username':'admin', 'password':'passw0rd', 'tenant':'admin'}
+
+hillos = {'url':'hillos:5000', 'username':'admin' , 'password':'passw0rd' , 'tenant':'admin'}
+
 
 class  TestOpenStackBase(unittest.TestCase): 
     
     #get the service from keystone
     def setUp(self):
-        url = "localhost:5000"
-        user="admin"
-        password = "passw0rd"
-        params = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"},"tenantName":"admin"}}' %(user,password)
-                
+        
+          
+        params = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['password'],self.env['tenant'])
         
         headers= {"Content-Type":"application/json"}
-        self.conn = httplib.HTTPConnection(url)
+
+        self.conn = httplib.HTTPConnection(self.env['url'])
      
         self.conn.request("POST","/v2.0/tokens",params,headers)
        
@@ -83,11 +86,17 @@ class  TestOpenStackBase(unittest.TestCase):
         self.conn.close()
         
         return dd
+    
+    
     def _call_cinder_api(self,method,path,params):
         return self._call_api(self.cinder_endpoints,method,path,params)
         
     
     def _call_nova_api(self,method,path,params):
         return self._call_api(self.nova_endpoints,method,path,params)
+    
+    def _call_quantum_api(self,method,path,params):
+        return self._call_api(self.quantum_endpoints,method,path,params)
+
         
         
