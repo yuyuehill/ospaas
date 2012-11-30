@@ -61,14 +61,14 @@ class  TestNova(test_os_base.TestOpenStackBase):
             print flavor['name']
             name = flavor['name']
             ref = flavor['links'][0]['href']
-            if name  == 'm1.small':
+            if name  == 'm1.tiny':
                 break
         return name,ref
     
     
     def _get_image(self):
         for image in self._list_images()['images']:
-            print image['name']
+            print 'get image ', image
             name = image['name']
             uri = image['links'][0]['href']
             if re.search('cirros',name):
@@ -83,13 +83,14 @@ class  TestNova(test_os_base.TestOpenStackBase):
             print network
             return network
     
-    def _create_server(self, image_uri,flavor_uri):
+    def _create_server(self, image_uri,flavor_uri, config_drive = True):
         server_params = json.dumps({
                             'server' : {
                                         'flavorRef':flavor_uri, 
                                         'imageRef':image_uri, 
                                         'metadata': {'owner':'hill'} , 
-                                        'name':'hill_server_%d' % random.randint(1,10000)
+                                        'name':'hill_server_%d' % random.randint(1,10000),
+                                        'config_drive':config_drive
                             }
                          })
         
@@ -116,17 +117,18 @@ class  TestNova(test_os_base.TestOpenStackBase):
         image_name,image_ref = self._get_image()
         
         #boot server
-        dd = self._create_server(image_ref, flavor_ref)
+        dd = self._create_server(image_ref, flavor_ref, image_ref)
         
         #check the status
         for x in range(100):
             #get the status of the created volume until it is available or error
             server =  self._list_servers(dd['id'])
             if server['status'] == 'ACTIVE':
-                self._delete_server(dd['id'])
+                print server 
+                #self._delete_server(dd['id'])
                 break
             elif server['status'] == 'ERROR':
-                self._delete_server(dd['id'])
+                #self._delete_server(dd['id'])
                 break
             
             else:

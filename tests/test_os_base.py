@@ -98,5 +98,8 @@ class  TestOpenStackBase(unittest.TestCase):
     def _call_quantum_api(self,method,path,params):
         return self._call_api(self.quantum_endpoints,method,path,params)
 
+    def _call_glance_api(self,method,path,params):
+        return self._call_api(self.glance_endpoints,method,path,params)
+        
         
         
