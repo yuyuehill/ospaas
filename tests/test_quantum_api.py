@@ -16,7 +16,7 @@ class  TestQuantum(test_os_base.TestOpenStackBase):
  
     def setUp(self):
         
-        self.env = test_os_base.localenv
+        self.env = self.LOCAL
         test_os_base.TestOpenStackBase.setUp(self)
         
  

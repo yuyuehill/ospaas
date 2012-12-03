@@ -12,18 +12,25 @@ import json
 import unittest
 import urlparse
 
-localenv = {'url':'localhost:5000', 'username':'admin', 'password':'passw0rd', 'tenant':'admin'}
-
-hillos = {'url':'hillos:5000', 'username':'admin' , 'password':'passw0rd' , 'tenant':'admin'}
 
 
 class  TestOpenStackBase(unittest.TestCase): 
+    
+    LOCAL = {'url':'localhost:5000', 'username':'admin', 'password':'passw0rd', 'tenant':'admin'}
+
+    HILLOS = {'url':'hillos:5000', 'username':'admin' , 'password':'passw0rd' , 'tenant':'admin'}
+
+    TIVX043 = {'url':'tivx043:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin'}
+
+    TIVX013 = {'url':'tivx013:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin'}
+
     
     #get the service from keystone
     def setUp(self):
         
           
         params = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['password'],self.env['tenant'])
+        print params
         
         headers= {"Content-Type":"application/json"}
 
@@ -59,7 +66,7 @@ class  TestOpenStackBase(unittest.TestCase):
                 self.quantum_endpoints = service['endpoints']
     
     
-    def _call_api(self,endpoints,method,path,params):
+    def _call_api(self,endpoints,method,path,params ):
         
         for endpoint in endpoints:
             public_url = endpoint["publicURL"]
@@ -68,7 +75,7 @@ class  TestOpenStackBase(unittest.TestCase):
         print scheme,netloc,rootpath,query,frag   
         
         api_conn =  httplib.HTTPConnection(netloc)
-        headers = {"Content-Type":"application/json","x-auth-token":self.apitoken}
+        headers = {"Content-Type":"application/json","x-auth-token":self.apitoken ,"Accept":"application/xml"}
         print "headers",headers,"method",method,"path", rootpath + path, "params", params
         api_conn.request(method,rootpath + path, params, headers)
         
