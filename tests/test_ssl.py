@@ -11,7 +11,7 @@ import os
 import ssl
 import tests
 
-from keystoneclient import client
+from keystoneclient.v2_0 import client
 
 
 ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
@@ -30,22 +30,29 @@ class ClientSSLTest(unittest.TestCase):
 
     TIVX043_SSL =  {"endpoint":"https://tivx043:5000", "user":"admin", "password":"admin", "tenant":"admin" ,
                     "cacert":"~/git/ospaas/examples/pki/certs/cacert.pem",
-                    "key":"~/git/ospaas/examples/pki/private/ssl_key.pem",
-                    "cert":"~/git/ospaas/examples/pki/certs/ssl_cert.pem"
+                    "key":"~/git/ospaas/examples/pki/certs/middleware.pem",
+                    "cert":"~/git/ospaas/examples/pki/certs/middleware.pem"
                     }
     
-    
-    def _test_connect(self):
+    LOCAL_SSL =  {"endpoint":"https://localhost:5000/v2.0", "user":"admin", "password":"passw0rd", "tenant":"admin" ,
+                    "cacert":CA,
+                    "key":CACLIENT,
+                    "cert":CACLIENT
+                    }
+   
+    def test_connect(self):
         
-        localenv = self.TIVX043_SSL
-        cl = client.HTTPClient(username=localenv["user"], password=localenv["password"],
-                           tenant_id=localenv["tenant"], auth_url=localenv["endpoint"],
-                           cacert=localenv["cacert"], key=localenv["key"], cert=localenv["cert"])
+        localenv = self.LOCAL_SSL
         
-        cl.request(localenv["endpoint"]+"/tokens","GET")
+        keystone = client.Client(username=localenv["user"], password=localenv["password"],
+                           tenant_name=localenv["tenant"], auth_url=localenv["endpoint"],
+                           cacert=localenv["cacert"], key=localenv["key"], cert=localenv["cert"],debug=True)
+        
+        
+        print keystone.tenants.list()
+        
     
-    
-    def test_https(self):
+    def _test_https(self):
         host = '9.125.233.133'
          # Verify Admin
         conn = httplib.HTTPSConnection(host, '35357')
@@ -82,10 +89,10 @@ class ClientSSLTest(unittest.TestCase):
 
         # require a certificate from the server
         ssl_sock = ssl.wrap_socket(s,
-                           ca_certs="~/git/ospaas/examples/pki/certs/cacerts.pem",
+                           ca_certs=CA,
                            cert_reqs=ssl.CERT_OPTIONAL)
 
-        ssl_sock.connect(('tivx043', 5000))
+        ssl_sock.connect(('localhost', 5000))
 
         print repr(ssl_sock.getpeername())
         print ssl_sock.cipher()
