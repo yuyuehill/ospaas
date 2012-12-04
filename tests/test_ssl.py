@@ -16,14 +16,15 @@ from keystoneclient import client
 
 ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
 
-CERTDIR = ROOTDIR.join("examples/pki/certs")
-KEYDIR = ROOTDIR.join("examples/pki/private")
+CERTDIR = os.path.join(ROOTDIR,"examples/pki/certs")
+KEYDIR = os.path.join(ROOTDIR,"examples/pki/private")
 CERT = os.path.join(CERTDIR, 'ssl_cert.pem')
 KEY = os.path.join(KEYDIR, 'ssl_key.pem')
 CA = os.path.join(CERTDIR, 'cacert.pem')
 CLIENT = os.path.join(CERTDIR, 'middleware.pem')
 
-CACLIENT= ROOTDIR.join("examples/pki/middlware.pem")
+CACLIENT= os.path.join(ROOTDIR,"examples/pki/certs/middleware.pem")
+
 
 class ClientSSLTest(unittest.TestCase):
 
@@ -45,26 +46,29 @@ class ClientSSLTest(unittest.TestCase):
     
     
     def test_https(self):
+        host = '9.125.233.133'
          # Verify Admin
-        conn = httplib.HTTPSConnection('localhost', '35357')
+        conn = httplib.HTTPSConnection(host, '35357')
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
         # Verify Public
-        conn = httplib.HTTPSConnection('localhost', '5000')
+        conn = httplib.HTTPSConnection(host, '5000')
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
         
+        print 'hill',CACLIENT
+        
          # Verify Admin
         conn = httplib.HTTPSConnection(
-            'localhost', '35357', CACLIENT, CACLIENT)
+            host, '35357', CACLIENT, CACLIENT)
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
         # Verify Public
         conn = httplib.HTTPSConnection(
-            'localhost', '5000', CACLIENT, CACLIENT)
+            host, '5000', CACLIENT, CACLIENT)
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
