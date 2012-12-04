@@ -22,5 +22,8 @@ class  myclass():
 myc = myclass(param2 = "Params")    
 
 func1 (p2 = "test") 
+import os
 
-   
+
+ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
+print ROOTDIR   

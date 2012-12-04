@@ -6,7 +6,24 @@ Created on Dec 2, 2012
 
 import unittest
 
+import httplib
+import os
+import ssl
+import tests
+
 from keystoneclient import client
+
+
+ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
+
+CERTDIR = ROOTDIR.join("examples/pki/certs")
+KEYDIR = ROOTDIR.join("examples/pki/private")
+CERT = os.path.join(CERTDIR, 'ssl_cert.pem')
+KEY = os.path.join(KEYDIR, 'ssl_key.pem')
+CA = os.path.join(CERTDIR, 'cacert.pem')
+CLIENT = os.path.join(CERTDIR, 'middleware.pem')
+
+CACLIENT= ROOTDIR.join("examples/pki/middlware.pem")
 
 class ClientSSLTest(unittest.TestCase):
 
@@ -27,14 +44,41 @@ class ClientSSLTest(unittest.TestCase):
         cl.request(localenv["endpoint"]+"/tokens","GET")
     
     
-    def test_ssl(self):
+    def test_https(self):
+         # Verify Admin
+        conn = httplib.HTTPSConnection('localhost', '35357')
+        conn.request('GET', '/')
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 300)
+        # Verify Public
+        conn = httplib.HTTPSConnection('localhost', '5000')
+        conn.request('GET', '/')
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 300)
+        
+         # Verify Admin
+        conn = httplib.HTTPSConnection(
+            'localhost', '35357', CACLIENT, CACLIENT)
+        conn.request('GET', '/')
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 300)
+        # Verify Public
+        conn = httplib.HTTPSConnection(
+            'localhost', '5000', CACLIENT, CACLIENT)
+        conn.request('GET', '/')
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 300)
+        
+        
+    
+    def _test_ssl(self):
         import socket, ssl, pprint
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # require a certificate from the server
         ssl_sock = ssl.wrap_socket(s,
-                           ca_certs="~/myca/test/cacert.pem",
+                           ca_certs="~/git/ospaas/examples/pki/certs/cacerts.pem",
                            cert_reqs=ssl.CERT_OPTIONAL)
 
         ssl_sock.connect(('tivx043', 5000))
