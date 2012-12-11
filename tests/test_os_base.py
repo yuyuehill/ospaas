@@ -18,6 +18,8 @@ class  TestOpenStackBase(unittest.TestCase):
     
     LOCAL = {'url':'localhost:5000', 'username':'admin', 'password':'passw0rd', 'tenant':'admin'}
 
+    HILLOPEN = {'url':'hillopen:5000', 'username':'admin' , 'password':'admin_pass' , 'tenant':'admin'}
+    
     HILLOS = {'url':'hillos:5000', 'username':'admin' , 'password':'passw0rd' , 'tenant':'admin'}
 
     TIVX043 = {'url':'tivx043:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin'}
@@ -72,10 +74,13 @@ class  TestOpenStackBase(unittest.TestCase):
             public_url = endpoint["publicURL"]
             scheme, netloc, rootpath, query, frag = urlparse.urlsplit(public_url)
         
-        print scheme,netloc,rootpath,query,frag   
+        print scheme,netloc,rootpath,query,frag  
+        
+        if netloc.split(':')[0] == 'localhost':
+            netloc = self.env['url'].split(':')[0] + ":" + netloc.split(':')[1]
         
         api_conn =  httplib.HTTPConnection(netloc)
-        headers = {"Content-Type":"application/json","x-auth-token":self.apitoken ,"Accept":"application/xml"}
+        headers = {"Content-Type":"application/json","x-auth-token":self.apitoken }
         print "headers",headers,"method",method,"path", rootpath + path, "params", params
         api_conn.request(method,rootpath + path, params, headers)
         
