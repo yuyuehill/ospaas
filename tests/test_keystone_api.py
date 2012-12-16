@@ -18,15 +18,40 @@ import base64
 
 class  TestKeyStone(test_os_base.TestOpenStackBase): 
    
-    TIVX043 = {'url':'tivx043:5000', 'username':'t1' , 'password':'t1', 'tenant':'admin','token':'80dc9ef6caef43809c48b14a1bc60c40'}
 
-    LOCAL = {'url':'localhost:5000', 'username':'test' , 'password':'test', 'tenant':'admin','token':'80dc9ef6caef43809c48b14a1bc60c40'}
    
     def setUp(self):
         
-        self.env = self.TIVX043
+        self.env = self.TIVX013
+        test_os_base.TestOpenStackBase.setUp(self)
+    
+    def __create_service(self):
+        params = json.dumps({'OS-KSADM:service':{'name':'mytest_ec2_%d' %random.randint(1000, 2000), 'type':'ec2'}})
+        dd = self.__call_keystone_admin_api('POST','/OS-KSADM/services',params)
+        print 'create service return  %s' % dd
+        return dd 
+    
+    def __delete_service(self, id):
         
-    def _encrpty_token(self,json_str):    
+        params = None
+        dd = self.__call_keystone_admin_api('DELETE','/OS-KSADM/services/%s' % id, params)
+        print 'delete  service return  %s' % dd
+    
+    
+    def __list_service(self):
+        params = None
+        dd = self.__call_keystone_admin_api('GET','/OS-KSADM/services',params)
+        print 'get service return  %s' % dd
+        return dd
+    
+    def __list_endpoints(self):
+        params = None
+        dd = self.__call_keystone_admin_api('GET','/endpoints',params)
+        print 'get endpoints return  %s' % dd
+        
+        return dd
+       
+    def __encrpty_token(self,json_str):    
         secret = "EzzNhXb17ZsOu9j18Ek7jg=="
         _iv = '\0' * 16
         secret_key = base64.b64decode(secret)
@@ -50,14 +75,14 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         
         return simple_token
     
-    def testSimpleToken(self):
+    def __testSimpleToken(self):
       
         params = '{"auth":{"passwordCredentials":{"username":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['tenant'])
        
         simpletoken_json = json.dumps({'username':'test','expiration': (time.time() + 10000)* 1000})
         print 'simpletoken_json',simpletoken_json        
         
-        simpletoken = self._encrpty_token(simpletoken_json)
+        simpletoken = self.__encrpty_token(simpletoken_json)
         
         print 'simpletoken', simpletoken
         headers= {"Content-Type":"application/json" ,"SimpleToken": simpletoken}
@@ -73,4 +98,24 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         print "Got reponse %s" % data
         dd = json.loads(data)
         self.conn.close()
+        
+        
+    def test_list_service_after_delete(self):
+        
+        
+        dd = self.__list_service()
+        print dd
+        
+        dd = self.__create_service()      
+        
+    
+        service_id = dd['OS-KSADM:service']['id']
+        
+        dd = self.__delete_service(service_id)
+        
+        print dd
+        
+        dd = self.__list_service()
+        print dd
+        
         

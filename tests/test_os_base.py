@@ -66,12 +66,14 @@ class  TestOpenStackBase(unittest.TestCase):
             elif service['type'] == 'network':
                 print 'network endpoints', service['endpoints']
                 self.quantum_endpoints = service['endpoints']
+            elif service['type'] == 'identity':
+                print 'identify endpoints', service['endpoints']
+                self.keystone_endpoints = service['endpoints']
     
-    
-    def _call_api(self,endpoints,method,path,params ):
+    def __call_api(self,endpoints,method,path,params, urltype='publicURL' ):
         
         for endpoint in endpoints:
-            public_url = endpoint["publicURL"]
+            public_url = endpoint[urltype]
             scheme, netloc, rootpath, query, frag = urlparse.urlsplit(public_url)
         
         print scheme,netloc,rootpath,query,frag  
@@ -100,18 +102,23 @@ class  TestOpenStackBase(unittest.TestCase):
         return dd
     
     
-    def _call_cinder_api(self,method,path,params):
-        return self._call_api(self.cinder_endpoints,method,path,params)
+    def __call_cinder_api(self,method,path,params):
+        return self.__call_api(self.cinder_endpoints,method,path,params)
         
     
-    def _call_nova_api(self,method,path,params):
-        return self._call_api(self.nova_endpoints,method,path,params)
+    def __call_nova_api(self,method,path,params):
+        return self.__call_api(self.nova_endpoints,method,path,params)
     
-    def _call_quantum_api(self,method,path,params):
-        return self._call_api(self.quantum_endpoints,method,path,params)
+    def __call_quantum_api(self,method,path,params):
+        return self.__call_api(self.quantum_endpoints,method,path,params)
 
-    def _call_glance_api(self,method,path,params):
-        return self._call_api(self.glance_endpoints,method,path,params)
+    def __call_glance_api(self,method,path,params):
+        return self.__call_api(self.glance_endpoints,method,path,params)
         
-        
+    def __call_keystone_admin_api(self,method,path,params):
+        return self.__call_api(self.keystone_endpoints,method,path,params,urltype='adminURL')    
+    
+    def __call_keystone_api(self,method,path,params):
+        return self.__call_api(self.keystone_endpoints,method,path,params)    
+ 
         

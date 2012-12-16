@@ -20,7 +20,7 @@ class  TestQuantum(test_os_base.TestOpenStackBase):
         test_os_base.TestOpenStackBase.setUp(self)
         
  
-    def _list_networks(self):
+    def __list_networks(self):
         params=json.dumps({})        
         dd=self._call_quantum_api('GET','/networks',params)
         self.assertTrue(dd.has_key("networks"),"failed to list networks")
@@ -28,4 +28,4 @@ class  TestQuantum(test_os_base.TestOpenStackBase):
         return dd['networks']
     
     def test_network_subnet(self):
-        print self._list_networks()
+        print self.__list_networks()

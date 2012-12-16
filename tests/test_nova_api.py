@@ -18,49 +18,49 @@ class  TestNova(test_os_base.TestOpenStackBase):
         test_os_base.TestOpenStackBase.setUp(self)
         
     
-    def _list_extends(self):
+    def __list_extends(self):
         params = json.dumps({})        
-        dd = self._call_nova_api('GET', '/extensions', params)
+        dd = self.__call_nova_api('GET', '/extensions', params)
        
         return dd
     
   
     
-    def _list_flavors(self):
+    def __list_flavors(self):
         params = json.dumps({})
-        dd = self._call_nova_api('GET', '/flavors', params)
+        dd = self.__call_nova_api('GET', '/flavors', params)
         return dd
     
-    def _list_images(self):
+    def __list_images(self):
         params = json.dumps({})
-        dd = self._call_nova_api('GET', '/images', params)
+        dd = self.__call_nova_api('GET', '/images', params)
         return dd
     
-    def _list_servers(self, server_id):
+    def __list_servers(self, server_id):
         params = json.dumps({})
         if server_id is None:
-            dd = self._call_nova_api('GET', '/servers', params)
+            dd = self.__call_nova_api('GET', '/servers', params)
             return dd['servers']
         else:
-            dd = self._call_nova_api('GET', '/servers/%s' % server_id, params)
+            dd = self.__call_nova_api('GET', '/servers/%s' % server_id, params)
             return dd['server']
         
-    def _list_networks(self):
+    def __list_networks(self):
         
         params = json.dumps({})
         
         #if quantum used as network service
-        if self.__dict__.has_key('quantum_endpoints') :
-            dd = self._call_quantum_api('GET', '/networks', params)
+        if self.___dict__.has_key('quantum_endpoints') :
+            dd = self.__call_quantum_api('GET', '/networks', params)
             return dd
         else:
-            dd = self._call_nova_api('GET', '/os-networks', params)
+            dd = self.__call_nova_api('GET', '/os-networks', params)
             return dd
                                         
     @classmethod    
-    def _get_flavor(self):
+    def __get_flavor(self):
         
-        for flavor in self._list_flavors()['flavors']:
+        for flavor in self.__list_flavors()['flavors']:
             print flavor['name']
             name = flavor['name']
             ref = flavor['links'][0]['href']
@@ -69,8 +69,8 @@ class  TestNova(test_os_base.TestOpenStackBase):
         return name, ref
     
     
-    def _get_image(self):
-        for image in self._list_images()['images']:
+    def __get_image(self):
+        for image in self.__list_images()['images']:
             print 'get image ', image
             name = image['name']
             uri = image['links'][0]['href']
@@ -79,14 +79,25 @@ class  TestNova(test_os_base.TestOpenStackBase):
             
         return None
     
-    def _get_network(self):
+    def __get_network(self):
         
         #return the first network
-        for network in self.self._list_networks()['networks']:
+        for network in self.self.__list_networks()['networks']:
             print network
             return network
+        
+    def __update_meta_data(self,service_id):
+        
+        meta_data = json.dumps({
+                                'metadata': {
+                                         'pattern_name':'hiltest',
+                                         'service_name':'hillservice'}})
+        dd = self.__call_nova_api('PUT', '/servers/%s' % service_id, meta_data)
+        
+        print 'update meta data %s' % dd
+        return dd
     
-    def _create_server(self, image_uri, flavor_uri, config_drive=True):
+    def __create_server(self, image_uri, flavor_uri, config_drive=True):
         server_params = json.dumps({
                             'server' : {
                                         'flavorRef':flavor_uri,
@@ -97,44 +108,50 @@ class  TestNova(test_os_base.TestOpenStackBase):
                             }
                          })
         
-        dd = self._call_nova_api('POST', '/servers', server_params)
+        dd = self.__call_nova_api('POST', '/servers', server_params)
         return dd['server']
     
-    def _delete_server(self, server_id):
+    def __delete_server(self, server_id):
         server_params = json.dumps({})
-        self._call_nova_api('DELETE', '/servers/%s' % server_id, server_params)
+        self.__call_nova_api('DELETE', '/servers/%s' % server_id, server_params)
         return {"id":server_id} 
        
     #test extends    
     def test_extends(self):
                 
-        dd = self._list_extends()    
+        dd = self.__list_extends()    
         for extension in dd['extensions']:
             print "name", extension["name"]
     
     #test servers        
-    def _test_server(self):
+    def __test_server(self):
        
-        flavor_name, flavor_ref = self._get_flavor()
-        image_name, image_ref = self._get_image()
+        flavor_name, flavor_ref = self.__get_flavor()
+        image_name, image_ref = self.__get_image()
         
         #boot server
-        dd = self._create_server(image_ref, flavor_ref, image_ref)
+        dd = self.__create_server(image_ref, flavor_ref, image_ref)
         
+        #update meta data
+        self.__update_meta_data(dd['id'])
+                
         #check the status
         for x in range(100):
             #get the status of the created volume until it is available or error
-            server = self._list_servers(dd['id'])
+            server = self.__list_servers(dd['id'])
+            
             if server['status'] == 'ACTIVE':
                 print server 
-                #self._delete_server(dd['id'])
+                #self.__delete_server(dd['id'])
                 break
             elif server['status'] == 'ERROR':
-                #self._delete_server(dd['id'])
+                #self.__delete_server(dd['id'])
                 break
             
             else:
                 print 'wait for next turn %d' % x
                 time.sleep(5)  
+        
+     
         
         

@@ -52,7 +52,7 @@ class ClientSSLTest(unittest.TestCase):
         print keystone.tenants.list()
         
     
-    def _test_https(self):
+    def __test_https(self):
         host = '9.125.233.133'
          # Verify Admin
         conn = httplib.HTTPSConnection(host, '35357')
@@ -82,7 +82,7 @@ class ClientSSLTest(unittest.TestCase):
         
         
     
-    def _test_ssl(self):
+    def __test_ssl(self):
         import socket, ssl, pprint
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
