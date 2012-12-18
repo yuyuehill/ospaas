@@ -25,6 +25,8 @@ class  TestOpenStackBase(unittest.TestCase):
     TIVX043 = {'url':'tivx043:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin'}
 
     TIVX013 = {'url':'tivx013:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin'}
+    
+    GEMINI =  {'url':'9.115.78.63:5000'  , 'username' :'admin', 'password':'admin', 'tenant':'admin'}
 
     
     #get the service from keystone

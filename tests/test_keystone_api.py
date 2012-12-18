@@ -22,7 +22,7 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
    
     def setUp(self):
         
-        self.env = self.TIVX013
+        self.env = self.LOCAL
         test_os_base.TestOpenStackBase.setUp(self)
     
     def __create_service(self):
@@ -53,33 +53,22 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
        
     def __encrpty_token(self,json_str):    
         secret = "EzzNhXb17ZsOu9j18Ek7jg=="
-        _iv = '\0' * 16
+        iv = '\0' * 16
         secret_key = base64.b64decode(secret)
-        
-              
-        print 'secret_key', secret_key , "json_str" , json_str
-        BLOCK_SIZE=16
-        decryptor=AES.new(secret_key,AES.MODE_CBC,_iv)
-        
-        PADDING=u'\x0000'
-        pad= lambda s: s +(BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
-  
-              
-        padding_json=pad(json_str)
-        print 'padding_json', padding_json
-        
-        encrpt_json= decryptor.encrypt(padding_json)
-        print 'encrpty_json', encrpt_json
-        
-        simple_token=base64.b64encode(encrpt_json)
-        
+        bs=16
+        pad = lambda s: s + (bs - len(s) % bs) * chr(bs - len(s) % bs) 
+        cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+        simple_token=base64.b64encode(cipher.encrypt(pad(json_str)))
+        print 'u+L/C6VjWSLqv4UmpggxsERzU85d/L9GPXzhHkBKMzSzFKUNfh3zn4HrPRyPobdgFv6qJiKH8xQ57wztZq/8TA=='
         return simple_token
     
-    def __testSimpleToken(self):
+    def testSimpleToken(self):
       
         params = '{"auth":{"passwordCredentials":{"username":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['tenant'])
        
-        simpletoken_json = json.dumps({'username':'test','expiration': (time.time() + 10000)* 1000})
+        simpletoken_json = '{"username":"admin","expiration":  %d }' % ((time.time() + 10000)* 1000)
+        #simpletoken_json = '{"username":"test", "expiration":"1355854311344.885"}'
+        
         print 'simpletoken_json',simpletoken_json        
         
         simpletoken = self.__encrpty_token(simpletoken_json)
@@ -100,7 +89,7 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         self.conn.close()
         
         
-    def test_list_service_after_delete(self):
+    def __test_list_service_after_delete(self):
         
         
         dd = self.__list_service()

@@ -25,5 +25,10 @@ func1 (p2 = "test")
 import os
 
 
-ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
-print ROOTDIR   
+import json
+
+print json.dumps({'username':'test','expiration':'1355854311344.885'})
+json.loads('{"username":"test","expiration":"1355854311344.885"}')
+
+
+          
