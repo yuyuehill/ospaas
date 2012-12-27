@@ -1,0 +1,27 @@
+target_box=tivx013
+
+ssh -o StrictHostKeyChecking=no root@$target_box "yum install -y qpid-tools"
+
+#config the nova to enable the notification
+ssh -o StrictHostKeyChecking=no root@$target_box "openstack-config --set /etc/nova/nova.conf DEFAULT debug true"
+ssh -o StrictHostKeyChecking=no root@$target_box "openstack-config --set /etc/nova/nova.conf DEFAULT default_notification_level INFO"
+ssh -o StrictHostKeyChecking=no root@$target_box "openstack-config --set /etc/nova/nova.conf DEFAULT default_publisher_id localhost"
+ssh -o StrictHostKeyChecking=no root@$target_box "openstack-config --set /etc/nova/nova.conf DEFAULT notification_topics  notifications"
+ssh -o StrictHostKeyChecking=no root@$target_box "openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver nova.openstack.common.notifier.rabbit_notifier"
+
+#restart the nova-compute
+
+ssh -o StrictHostKeyChecking=no root@$target_box "service openstack-nova-compute restart"
+
+sleep 10
+
+. /home/hill/openstack/keystonerc.$target_box 
+
+#start the event notification receiver
+/usr/share/doc/python-qpid/examples/api/drain -b $target_box -t 30 nova/notifications.info > /tmp/myevents &
+
+nova boot --image rhel6min --flavor m1.tiny --meta pattern=hill  mynotifitest
+
+sleep 30
+
+cat /tmp/myevents
