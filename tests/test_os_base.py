@@ -104,23 +104,23 @@ class  TestOpenStackBase(unittest.TestCase):
         return dd
     
     
-    def __call_cinder_api(self,method,path,params):
+    def call_cinder_api(self,method,path,params):
         return self.__call_api(self.cinder_endpoints,method,path,params)
         
     
-    def __call_nova_api(self,method,path,params):
+    def call_nova_api(self,method,path,params):
         return self.__call_api(self.nova_endpoints,method,path,params)
     
-    def __call_quantum_api(self,method,path,params):
+    def call_quantum_api(self,method,path,params):
         return self.__call_api(self.quantum_endpoints,method,path,params)
 
-    def __call_glance_api(self,method,path,params):
+    def call_glance_api(self,method,path,params):
         return self.__call_api(self.glance_endpoints,method,path,params)
         
-    def __call_keystone_admin_api(self,method,path,params):
+    def call_keystone_admin_api(self,method,path,params):
         return self.__call_api(self.keystone_endpoints,method,path,params,urltype='adminURL')    
     
-    def __call_keystone_api(self,method,path,params):
+    def call_keystone_api(self,method,path,params):
         return self.__call_api(self.keystone_endpoints,method,path,params)    
  
         

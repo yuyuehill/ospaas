@@ -1,0 +1,61 @@
+#download latest installer build from zodiac
+/home/hill/bso.py
+
+target_box="tivx013"
+complete=$(curl -q http://zodiac.cn.ibm.com/projects/s/scp2.2/build/image/Installer/complete)
+download_url="http://zodiac.cn.ibm.com/projects/s/scp2.2/build/image/Installer/${complete}"
+echo $complete
+complete_short=$(echo $complete | sed 's/-//g')
+echo $complete_short
+installer="IBM_SmartCloud_Installer_and_OpenStack-2.2.0.0-${complete_short}.tgz"
+
+echo $download_url
+
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box "rm -fr /opt/scp_build/*.*" 
+
+#download openstack and installer only 
+ssh -o StrictHostKeyChecking=no root@$target_box "cd /opt/scp_build; wget -q ${download_url}/${installer}"
+
+ssh -o StrictHostKeyChecking=no root@$target_box "cd /opt/scp_build; tar -xf ${installer}"
+
+ssh -o StrictHostKeyChecking=no root@$target_box "mkdir -p /opt/scp_repo; rm -fr /opt/scp_repo/*; cp -r --force /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ibm-rpms/*  /opt/scp_repo"
+
+ssh -o StrictHostKeyChecking=no root@$target_box "yum install createrepo; cd /opt/scp_repo; createrepo . "
+
+ssh -o StrictHostKeyChecking=no root@$target_box "yum clean all; yum update -y"
+
+ssh -o StrictHostKeyChecking=no root@$target_box "cd /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone; ./uninstall.sh"
+
+ssh -o StrictHostKeyChecking=no root@$target_box "sed  -i 's/br0/eth0/g' /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone/INSTALL.cfg"
+#ssh -o StrictHostKeyChecking=no root@$target_box "sed  -i 's/%/${target_box}/g' /usr/bin/openstack-db"
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box "cd /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone; ./install.sh < /dev/null >/dev/null 2>&1"
+
+#reinstall iaasgateway
+#ssh -o StrictHostKeyChecking=no root@$target_box "ps -ef | grep iaas-gateway  | grep -v grep | awk '{print \$2}' | xargs kill -9 "
+#ssh -o StrictHostKeyChecking=no root@$target_box "yum remove iaasgateway"
+
+#ssh -o StrictHostKeyChecking=no root@$target_box "yum install -y  iaasgateway"
+#scp -o StrictHostKeyChecking=no /home/hill/openstack/conf/iaasgateway.conf root@$target_box:/etc/iaasgateway 
+#ssh -o StrictHostKeyChecking=no root@$target_box "cd /opt/ibm/openstack/iaas/iaasgateway/bin; nohup ./iaas-gateway 1>&2 &"
+
+#enable the port of keystone api
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 5000 -j ACCEPT"
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 35357 -j ACCEPT"
+
+#ebable the port of glance api
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 9292 -j ACCEPT"
+
+#enable the port of nova api
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 8774 -j ACCEPT"
+#enable the port of cinder api
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 8776 -j ACCEPT"
+#qpid
+ssh -o StrictHostKeyChecking=no root@$target_box "iptables -I INPUT 1 -p tcp --dport 5672 -j ACCEPT"
+
+#upload the testing image
+. /home/hill/openstack/keystonerc.$target_box 
+glance image-create --name rhel6min --is-public true --container-format ovf --disk-format qcow2 --file  /data/openstack_images/rhel6-mini.qcow2

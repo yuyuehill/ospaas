@@ -25,33 +25,33 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         self.env = self.LOCAL
         test_os_base.TestOpenStackBase.setUp(self)
     
-    def __create_service(self):
+    def create_service(self):
         params = json.dumps({'OS-KSADM:service':{'name':'mytest_ec2_%d' %random.randint(1000, 2000), 'type':'ec2'}})
-        dd = self.__call_keystone_admin_api('POST','/OS-KSADM/services',params)
+        dd = self.call_keystone_admin_api('POST','/OS-KSADM/services',params)
         print 'create service return  %s' % dd
         return dd 
     
-    def __delete_service(self, id):
+    def delete_service(self, id):
         
         params = None
-        dd = self.__call_keystone_admin_api('DELETE','/OS-KSADM/services/%s' % id, params)
+        dd = self.call_keystone_admin_api('DELETE','/OS-KSADM/services/%s' % id, params)
         print 'delete  service return  %s' % dd
     
     
-    def __list_service(self):
+    def list_service(self):
         params = None
-        dd = self.__call_keystone_admin_api('GET','/OS-KSADM/services',params)
+        dd = self.call_keystone_admin_api('GET','/OS-KSADM/services',params)
         print 'get service return  %s' % dd
         return dd
     
-    def __list_endpoints(self):
+    def list_endpoints(self):
         params = None
-        dd = self.__call_keystone_admin_api('GET','/endpoints',params)
+        dd = self.call_keystone_admin_api('GET','/endpoints',params)
         print 'get endpoints return  %s' % dd
         
         return dd
        
-    def __encrpty_token(self,json_str):    
+    def encrpty_token(self,json_str):    
         secret = "EzzNhXb17ZsOu9j18Ek7jg=="
         iv = '\0' * 16
         secret_key = base64.b64decode(secret)
@@ -71,7 +71,7 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         
         print 'simpletoken_json',simpletoken_json        
         
-        simpletoken = self.__encrpty_token(simpletoken_json)
+        simpletoken = self.encrpty_token(simpletoken_json)
         
         print 'simpletoken', simpletoken
         headers= {"Content-Type":"application/json" ,"SimpleToken": simpletoken}
@@ -89,22 +89,22 @@ class  TestKeyStone(test_os_base.TestOpenStackBase):
         self.conn.close()
         
         
-    def __test_list_service_after_delete(self):
+    def test_list_service_after_delete(self):
         
         
-        dd = self.__list_service()
+        dd = self.list_service()
         print dd
         
-        dd = self.__create_service()      
+        dd = self.create_service()      
         
     
         service_id = dd['OS-KSADM:service']['id']
         
-        dd = self.__delete_service(service_id)
+        dd = self.delete_service(service_id)
         
         print dd
         
-        dd = self.__list_service()
+        dd = self.list_service()
         print dd
         
         

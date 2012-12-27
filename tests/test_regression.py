@@ -22,7 +22,7 @@ class  TestRegression(test_nova_api.TestNova):
     
           
     def test_network_list(self):
-        dd = self._list_networks()
+        dd = self.list_networks()
         print dd
         
 

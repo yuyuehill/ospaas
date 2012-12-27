@@ -20,7 +20,7 @@ class  TestGlance(test_os_base.TestOpenStackBase):
     
     def __index_images(self):
         
-        dd=self.__call_glance_api('GET','/v1/images?limit=999',None)
+        dd=self.call_glance_api('GET','/v1/images?limit=999',None)
        
         return dd
     
@@ -28,7 +28,7 @@ class  TestGlance(test_os_base.TestOpenStackBase):
         
         for i in range(num):
             params = json.dumps({'name': 'hill_test_image_%s' % random.randint(1, 10000) , 'tags':['hill']})
-            dd = self.__call_glance_api('POST','/v2/images',params)
+            dd = self.call_glance_api('POST','/v2/images',params)
             print 'create image return %s' % dd
         
         return dd
@@ -36,6 +36,6 @@ class  TestGlance(test_os_base.TestOpenStackBase):
     def test_images(self):
         
         #dd = self.__create_image(10);
-        print len(self.__index_images()['images'])
+        print len(self.index_images()['images'])
         
         

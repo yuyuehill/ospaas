@@ -17,9 +17,21 @@ def func1 (p1 = None, p2 = None, p3= None):
 class  myclass():
     def __init__(self, param = None, param2= None):
         print "param %s, %s" % (param,param2)
+    def _hide_methd(self):    
+        print "i am in hide method"
+        self._hide_method1()
         
+    def _hide_methd1(self):    
+        print "i am in hide method"
+        
+class myparent(myclass):
+    def public_methd(self):
+        self._hide_methd()
 
 myc = myclass(param2 = "Params")    
+
+myp = myparent()
+myp.public_methd()
 
 func1 (p2 = "test") 
 import os
