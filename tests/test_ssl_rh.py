@@ -16,46 +16,45 @@ from keystoneclient.v2_0 import client
 
 ROOTDIR = os.path.dirname(os.path.abspath(os.curdir))
 
-CERTDIR = os.path.join(ROOTDIR,"examples/pki/certs")
-KEYDIR = os.path.join(ROOTDIR,"examples/pki/private")
-CERT = os.path.join(CERTDIR, 'ssl_cert.pem')
-KEY = os.path.join(KEYDIR, 'ssl_key.pem')
-CA = os.path.join(CERTDIR, 'cacert.pem')
+CERTDIR = os.path.join(ROOTDIR,"examples/ssl/certs")
+KEYDIR = os.path.join(ROOTDIR,"examples/ssl/private")
+CERT = os.path.join(CERTDIR, 'keystone.pem')
+KEY = os.path.join(KEYDIR, 'keystonekey.pem')
+CA = os.path.join(CERTDIR, 'ca.pem')
 CLIENT = os.path.join(CERTDIR, 'middleware.pem')
 
-CACLIENT= os.path.join(ROOTDIR,"examples/pki/certs/middleware.pem")
+CACLIENT= os.path.join(ROOTDIR,"examples/ssl/certs/middleware.pem")
 
 
 class ClientSSLTest(unittest.TestCase):
 
-    TIVX043_SSL =  {"endpoint":"https://tivx043:5000", "user":"admin", "password":"admin", "tenant":"admin" ,
-                    "cacert":"~/git/ospaas/examples/pki/certs/cacert.pem",
-                    "key":"~/git/ospaas/examples/pki/certs/middleware.pem",
-                    "cert":"~/git/ospaas/examples/pki/certs/middleware.pem"
+    TIVX043_SSL =  {"host":"tivx043","endpoint":"https://tivx043:5000", "user":"admin", "password":"admin", "tenant":"admin" ,
+                    "cacert":CA,
+                    "key":KEY,
+                    "cert":CERT
                     }
     
-    LOCAL_SSL =  {"endpoint":"https://localhost:5000/v2.0", "user":"admin", "password":"passw0rd", "tenant":"admin" ,
+    TIVX013_SSL =  {"host":"tivx013","endpoint":"https://tivx013:5000", "user":"admin", "password":"admin", "tenant":"admin" ,
                     "cacert":CA,
-                    "key":CACLIENT,
-                    "cert":CACLIENT
+                    "key":KEY,
+                    "cert":CERT
                     }
-   
-    def __test_connect(self):
+    def setUp(self):
+        self.localenv=self.TIVX013_SSL
+    
+    def test_connect(self):
         
-        localenv = self.TIVX043_SSL
-        
-        keystone = client.Client(username=localenv["user"], password=localenv["password"],
-                           tenant_name=localenv["tenant"], auth_url=localenv["endpoint"],
-                           cacert=localenv["cacert"], key=localenv["key"], cert=localenv["cert"],debug=True)
+        keystone = client.Client(username=self.localenv["user"], password=self.localenv["password"],
+                           tenant_name=self.localenv["tenant"], auth_url=self.localenv["endpoint"],
+                           cacert=self.localenv["cacert"], key=self.localenv["key"], cert=self.localenv["cert"],debug=True)
         
         
         print keystone.tenants.list()
         
-    
-    def test_https(self):
-      
-        host="tivx013"
-         # Verify Admin
+    def __test_https_one_way(self):
+        
+        host=self.localenv["host"]
+        # Verify Admin
         conn = httplib.HTTPSConnection(host, '35357')
         conn.request('GET', '/')
         resp = conn.getresponse()
@@ -69,10 +68,14 @@ class ClientSSLTest(unittest.TestCase):
         print "verify %s public port ssl single way successful" % host 
         
         print 'hill',CACLIENT
+    
+    def __test_https_two_way(self):
+        
+        host=self.localenv["host"]
         
          # Verify Admin
         conn = httplib.HTTPSConnection(
-            host, '35357', CACLIENT, CACLIENT)
+            host, '35357', CACLIENT,CACLIENT)
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
