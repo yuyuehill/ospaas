@@ -40,9 +40,9 @@ class ClientSSLTest(unittest.TestCase):
                     "cert":CACLIENT
                     }
    
-    def test_connect(self):
+    def __test_connect(self):
         
-        localenv = self.LOCAL_SSL
+        localenv = self.TIVX043_SSL
         
         keystone = client.Client(username=localenv["user"], password=localenv["password"],
                            tenant_name=localenv["tenant"], auth_url=localenv["endpoint"],
@@ -52,18 +52,21 @@ class ClientSSLTest(unittest.TestCase):
         print keystone.tenants.list()
         
     
-    def __test_https(self):
-        host = '9.125.233.133'
+    def test_https(self):
+        host = "tivx043"
+        
          # Verify Admin
         conn = httplib.HTTPSConnection(host, '35357')
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
+        print "verify %s admin port ssl single way successful" % host 
         # Verify Public
         conn = httplib.HTTPSConnection(host, '5000')
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
+        print "verify %s public port ssl single way successful" % host 
         
         print 'hill',CACLIENT
         
@@ -73,13 +76,15 @@ class ClientSSLTest(unittest.TestCase):
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
+        
+        print "verify %s admin port ssl dual way successful" % host 
         # Verify Public
         conn = httplib.HTTPSConnection(
             host, '5000', CACLIENT, CACLIENT)
         conn.request('GET', '/')
         resp = conn.getresponse()
         self.assertEqual(resp.status, 300)
-        
+        print "verify %s public port ssl dual way successful" % host 
         
     
     def __test_ssl(self):
