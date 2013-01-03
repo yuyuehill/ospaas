@@ -7,7 +7,7 @@ Created on Oct 28, 2012
 import httplib
 import json
 import random
-import test_os_base
+from tests.openstack import test_os_base
 import time
 
 

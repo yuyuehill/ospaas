@@ -9,7 +9,9 @@ import unittest
 import httplib
 import os
 import ssl
-import tests
+
+
+
 
 from keystoneclient.v2_0 import client
 

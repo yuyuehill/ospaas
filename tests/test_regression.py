@@ -8,8 +8,8 @@ for general openstack
 '''
 import unittest
 import json
-import test_os_base
-import test_nova_api
+from tests.openstack import test_os_base,test_nova_api
+
 
 
 class  TestRegression(test_nova_api.TestNova): 

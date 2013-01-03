@@ -1,4 +1,5 @@
 
+import tests.openstack.test_os_base
 
 abc = { "test":"111",
        "test2":"fff"
@@ -19,10 +20,10 @@ class  myclass():
         print "param %s, %s" % (param,param2)
     def _hide_methd(self):    
         print "i am in hide method"
-        self._hide_method1()
+       
         
-    def _hide_methd1(self):    
-        print "i am in hide method"
+    def __hide_methd1(self):    
+        print "i am in hide method1"
         
 class myparent(myclass):
     def public_methd(self):
