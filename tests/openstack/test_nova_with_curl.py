@@ -12,9 +12,10 @@ import random
 class TestCurlNova(unittest.TestCase):
     
     GEMINI = {"host":"geminios", "tenant":"admin", "user":"admin", "password":"admin"}
+    TIVX043 = {"host":"tivx043", "tenant":"admin", "user":"admin", "password":"admin"}
     
     def setUp(self):
-        self.env = self.GEMINI
+        self.env = self.TIVX043
         self.keystone_url = "http://%s:5000/v2.0/tokens" % self.env["host"]
         self.auth_data = "{\"auth\":{\"passwordCredentials\":{\"username\":\"%s\",\"password\":\"%s\"},\"tenantName\":\"%s\"}}" % (self.env["user"], self.env["password"], self.env["tenant"])
         self.nova_url = "http://%s:8773"
@@ -57,7 +58,7 @@ class TestCurlNova(unittest.TestCase):
         
         
     
-    def test_run_server_with_config_drive(self):
+    def _test_run_server_with_config_drive(self):
         
         new_server_with_config_drive = """<?xml version="1.0" encoding="UTF-8"?>
             <server name="hill_server_xml"  imageRef="43d5adf1-3390-46d2-9061-1e8aeb16826a" flavorRef="1" config_drive="true" whatiswon="hh"> 
@@ -112,3 +113,32 @@ class TestCurlNova(unittest.TestCase):
         c.perform()
         
         print b.getvalue()
+        
+    def test_os_network(self):
+        b = StringIO.StringIO()
+       
+        c = pycurl.Curl()
+        url = "%s/os-networks" % self.nova_endpoints[0]["publicURL"]
+        
+        #c.setopt(c.URL, url)
+        c.setopt(c.URL,str(url))
+        auth_token = 'X-Auth-Token:%s' % self.token
+        #c.setopt(c.HTTPHEADER, ['Content-Type: application/xml; charset=ISO-8859-1 ; Accept: application/xml', str(auth_token) ])
+        c.setopt(c.HTTPHEADER, ['Accept: application/xml', str(auth_token) ])
+        c.setopt(c.WRITEFUNCTION, b.write)
+        c.setopt(c.VERBOSE, True)
+        c.perform()
+        
+        
+        buff = b.getvalue();
+        print buff
+        b.close()
+        networks=json.loads(buff)
+        
+        if networks["networks"][0]["bridge_interface"] is None:
+            print "the bridge interface is none"
+        else:
+            print "this bridge interface is string"
+        
+        
+        
