@@ -10,14 +10,14 @@ import datetime
 import sys
 import unittest
 import json
-from nova.openstack.common import jsonutils
+#from nova.openstack.common import jsonutils
 
 class TestQpid(unittest.TestCase):
 
 
     def testDateTime(self):
     
-        broker =  "tivx013:5672"
+        broker =  "172.16.100.176:5672"
         topic = "amq.topic"
         connection = Connection(broker)
         try:
@@ -32,7 +32,7 @@ class TestQpid(unittest.TestCase):
             message = receiver.fetch()
             #print message.content['created_at'].datetime()
             
-            print jsonutils.to_primitive(message.content['created_at'])
+            print message.content['created_at']
             print json.dumps(message.content)
             
             session.acknowledge()
