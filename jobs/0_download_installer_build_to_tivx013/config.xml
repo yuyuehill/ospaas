@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx013
+
+build=IBM_SmartCloud_Orchestrator.tgz
+
+#get the latest build
+complete=$(curl -q http://zodiac.cn.ibm.com/projects/s/scp2.2/build/image/Installer/complete)
+download_url=&quot;http://9.123.127.11/projects/s/scp2.2/build/image/Installer/${complete}&quot;
+
+#download_url=&quot;http://9.123.127.11/projects/s/scp2.2/build/image/Installer_personal/20130413-1826&quot; 
+
+latest_complete=$(cat /home/hill/sco_build/latest_complete)
+
+if [ &quot;$latest_complete&quot; = &quot;$complete&quot; ] ; then
+  echo &apos;No new build to download&apos; 
+  exit 0
+fi
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /home/scp_build/*&quot; 
+
+#download openstack and installer only 
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build; wget -q ${download_url}/${build}&quot;
+
+#extract build
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build; tar -xf ${build}&quot;
+
+
+
+echo $complete &gt; /home/hill/sco_build/latest_complete</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>1_firstbox_run_tivx013</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

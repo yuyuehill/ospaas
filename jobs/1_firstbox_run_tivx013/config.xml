@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx013
+
+#extract openstack and installer
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build; tar -xf IBM_SmartCloud_Installer_and_OpenStack-2.2.0.0*.tgz&quot;
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/eth0/eth1/g&apos; /home/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ISCP.cfg&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/40/5/g&apos;      /home/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ISCP.cfg&quot;
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/400000/20000/g&apos; /home/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/firstbox_run&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /tmp/*.log&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;ifdown br4090 &amp;&amp; ifup br4090&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/; ./firstbox_run -s  &lt; /dev/null &gt; /tmp/firstbox_run_output.log 2&gt;&amp;1&quot;
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>2_update_cookbook_from_tivx013</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

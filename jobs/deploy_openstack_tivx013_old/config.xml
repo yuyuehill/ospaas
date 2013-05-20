@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#download latest installer build from zodiac
+/home/hill/bso.py
+
+target_box=&quot;tivx013&quot;
+complete=$(curl -q http://zodiac.cn.ibm.com/projects/s/scp2.2/build/image/Installer/complete)
+download_url=&quot;http://zodiac.cn.ibm.com/projects/s/scp2.2/build/image/Installer/${complete}&quot;
+echo $complete
+complete_short=$(echo $complete | sed &apos;s/-//g&apos;)
+echo $complete_short
+installer=&quot;IBM_SmartCloud_Installer_and_OpenStack-2.2.0.0-${complete_short}.tgz&quot;
+
+echo $download_url
+
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /opt/scp_build/*.*&quot; 
+
+#download openstack and installer only 
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/scp_build; wget -q ${download_url}/${installer}&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/scp_build; tar -xf ${installer}&quot;
+
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;mkdir -p /opt/scp_repo; rm -fr /opt/scp_repo/*; cp -r --force /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ibm-rpms/*  /opt/scp_repo&quot;
+
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install createrepo; cd /opt/scp_repo; createrepo . &quot;
+
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum clean all; yum update -y&quot;
+
+#modify ISCP.cfg
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/^managment_network_device=eth0/managment_network_device=br0/g&apos; /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ISCP.cfg&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/^isolated_network=\&quot;true\&quot;/isolated_network=\&quot;false\&quot;/g&apos; /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/ISCP.cfg&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/^tftp_setup/#tftp_setup/g&apos; /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/firstbox_run&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/^base_image_setup/#base_image_setup/g&apos; /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/firstbox_run&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/; ./firstbox_run -s  &lt; /dev/null &gt; /dev/null 2&gt;&amp;1&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone; ./uninstall.sh&quot;
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;sed  -i &apos;s/br0/brext/g&apos; /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone/INSTALL.cfg&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/scp_build/IBM_SmartCloud_Installer_and_OpenStack*/deploy-scripts/allinone; ./install.sh &lt; /dev/null &gt;/dev/null 2&gt;&amp;1&quot;
+
+
+
+#enable the port of keystone api
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 5000 -j ACCEPT&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 35357 -j ACCEPT&quot;
+
+#ebable the port of glance api
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 9292 -j ACCEPT&quot;
+
+#enable the port of nova api
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 8774 -j ACCEPT&quot;
+#enable the port of cinder api
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 8776 -j ACCEPT&quot;
+#qpid
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 5672 -j ACCEPT&quot;
+
+#enable the port of mysql
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 3306 -j ACCEPT&quot;
+#enable the port of mysql
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 80 -j ACCEPT&quot;
+
+
+#upload the testing image
+. /home/hill/openstack/keystonerc.$target_box 
+glance image-create --name rhel6min --is-public true --container-format ovf --disk-format qcow2 --file  /data/openstack_images/rhel6-mini.qcow2</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>openstack_verify_tivx013</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

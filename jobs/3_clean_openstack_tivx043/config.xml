@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx043
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr  /home/scp_build; mkdir -p /home/scp_build&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;scp tivx013:/home/scp_build/IBM_SmartCloud_Installer_and_OpenStack-*/deploy-scripts/allinone/*.* /home/scp_build&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build &amp;&amp; ./uninstall.sh || echo &apos;ignore failure&apos;&quot;
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /home/scp_build &amp;&amp; ./uninstallProxy.sh || echo &apos;ignore failure&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum remove -y smartcloud ||  echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;pkill dnsmasq ||  echo &apos;ignore&apos;&quot;
+
+#remove all the users
+users=(nova cinder keystone glance quantum smartcloud scedb novadb cinderdb keystonedb ksdb glancedb quantumdb qtdb sce )
+
+for user in ${users[*]}
+do
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;userdel $user || echo &apos;ignore&apos;&quot;
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;groupdel $user || echo &apos;ignore&apos;&quot;
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr  /home/$user || echo &apos;ignore&apos;&quot;
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr  /etc/$user || echo &apos;ignore&apos;&quot;
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr  /var/log/$user || echo &apos;ignore&apos;&quot;
+  ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr  /var/lib/$user || echo &apos;ignore&apos;&quot;
+done
+
+
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;source /home/db2inst1/sqllib/db2profile &amp;&amp; /opt/ibm/db2/v10.1/das/bin/db2admin stop  &amp;&amp; /opt/ibm/db2/v10.1/instance/dasdrop&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;/opt/ibm/db2/v10.1/instance/dasdrop || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;source /home/db2inst1/sqllib/db2profile &amp;&amp; db2stop force &amp;&amp; db2 terminate || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;/opt/ibm/db2/v10.1/instance/db2idrop db2inst1 || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;/opt/ibm/db2/v10.1/install/db2_deinstall -a || echo &apos;ignore&apos;&quot;
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;userdel dasusr1  || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;userdel db2inst1  || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;userdel db2fenc1  || echo &apos;ignore&apos;&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;groupdel dasadm1 || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;groupdel db2iadm1 || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;groupdel db2fadm1 || echo &apos;ignore&apos;&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /opt/ibm/db2 &amp;&amp; rm -fr /home/db2inst1  &amp;&amp; rm -fr /home/dasusr1 &amp;&amp; rm -fr /home/db2fenc1 &amp;&amp; rm -fr /home/dasusr1&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /opt/install-archives &amp;&amp; rm -fr /opt/ibm/openstack &amp;&amp; rm -fr /usr/lib/python2.6/site-packages/smartcloud&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;service mysqld stop || yum -y remove mysql || rm -fr /etc/my.cnf ||  rm -fr /var/lib/mysql || &apos;ignore&apos; &quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum clean all || rm -fr /var/log/nova || rm -fr /etc/nova || rm -fr /root/.my.cnf &quot;
+
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>4_deploy_smartcloud_tivx043</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

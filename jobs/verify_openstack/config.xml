@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=&quot;tivx013&quot;
+
+. /home/hill/openstack/keystonerc.$target_box 
+
+glance image-create --name rhel6min --is-public true --container-format ovf --disk-format qcow2 --file  /data/openstack_images/rhel6-mini.qcow2
+
+keystone user-list 
+keystone service-list
+keystone endpoint-list
+
+nova  network-list
+
+# regression the network show
+#nova network-show $(nova network-list | awk &apos;{print $2}&apos; | grep -v ID)
+
+
+glance index 
+
+#boot a new server
+nova boot --image rhel6min --flavor m1.tiny mytest
+
+nova list
+
+check_ip(){
+     ssh -o StrictHostKeyChecking=no root@$target_box ping -c 1 $1
+     return $?
+}
+
+for i in {1..10}
+
+do 
+   #wait 10 seconds
+   sleep 10
+   #get IP address
+   ipaddr=$(nova list | grep ACTIVE | sed &apos;s/private=//g&apos; | awk &apos;{print $8}&apos;)
+   echo &quot;The active ip address is ${ipaddr}&quot;
+
+   if [ ! -z $ipaddr ]; then
+
+      if (check_ip $ipaddr) then
+         echo &quot;The ip address ${ipaddr} is not available&quot;
+      else
+         echo &quot;The ip address ${ipaddr} is available &quot;
+         exit 0
+      fi   
+
+   else
+     echo &quot;Not get the ip address wait and try another round&quot;
+   fi
+
+done
+echo &quot;The ip address is not avaialble&quot;
+exit 1   
+  </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

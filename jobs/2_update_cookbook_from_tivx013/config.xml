@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx013
+#get cookbook from tivx013
+
+
+ssh -o StrictHostKeyChecking=no root@tivx043 &quot;iptables -I INPUT 1 -p tcp --dport 4000 -j ACCEPT&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install -y scp-cookbooks&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install -y scp-chef_repo_srv&quot;
+
+
+
+rm -fr /home/hill/chef-repo &amp;&amp; mkdir /home/hill/chef-repo
+
+scp -r root@$target_box:/iaas/cookbooks /home/hill/chef-repo
+scp -r root@$target_box:/iaas/chef-repo-srv/data /home/hill/chef-repo
+
+ssh -o StrictHostKeyChecking=no hill@hillchef &quot;rm -fr /home/hill/scp/cookbooks;mkdir -p /home/hill/scp/cookbooks&quot;
+scp -r /home/hill/chef-repo/cookbooks hill@hillchef:/home/hill/scp 
+ssh -o StrictHostKeyChecking=no hill@hillchef &quot;cd /home/hill/scp/cookbooks &amp;&amp; rm -fr rabbitmq* &amp;&amp; knife cookbook upload *&quot;
+
+
+#knife cookbook bulk delete * || echo &apos;ignore failure&apos;
+#cd /home/hill/chef-repo/cookbooks
+
+#for dir in $(ls)
+#do 
+#  echo &quot;update cookbook $dir&quot; 
+  #knife cookbook list | grep $dir &amp;&amp; knife cookbook delete $dir -y
+#  knife cookbook --include-dependencies upload $dir &amp;&amp; echo 0
+#done
+
+#setup roles and environment, prepare the role json file
+cd /home/hill/chef-repo/data/roles
+for role in *
+do
+  echo &quot;delete old role $role&quot;
+  knife role list | grep -w $role &amp;&amp; knife role delete $role -y 
+  mv $role $role.json
+done
+
+#upload roles
+for f in *.json ; do
+  knife role from file $f
+done
+
+#load environment for each all-in-one environment
+knife environment list  | grep -w tivx043 &amp;&amp; knife environment delete tivx043 -y || echo &apos;ignore&apos;
+knife environment from file /home/hill/hillenv/chef/environments/tivx043.json
+
+#knife environment list  | grep -w tivx013 &amp;&amp; knife environment delete tivx013 -y || echo &apos;ignore&apos;
+#knife environment from file /home/hill/hillenv/chef/environments/tivx013.json
+
+#knife environment list  | grep -w hill &amp;&amp; knife environment delete hill -y || echo &apos;ignore&apos;
+#knife environment from file /home/hill/hillenv/chef/environments/hill.json
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>3_clean_openstack_tivx043, 5_clean_openstack_tivx013</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

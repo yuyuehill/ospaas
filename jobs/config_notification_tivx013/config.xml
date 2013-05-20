@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>1. enable the notification &#xd;
+2. check the event type</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx013
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install -y qpid-tools&quot;
+
+#config the nova to enable the notification
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT debug true&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT default_notification_level INFO&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT default_publisher_id localhost&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT notification_topics  notifications&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT notification_driver nova.openstack.common.notifier.rabbit_notifier&quot;
+
+#restart the nova-compute
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;service openstack-nova-compute restart&quot;
+
+sleep 10
+
+. /home/hill/openstack/keystonerc.$target_box 
+
+#start the event notification receiver
+/usr/share/doc/python-qpid/examples/api/drain -b $target_box -t 30 nova/notifications.info &gt; /tmp/myevents &amp;
+
+nova boot --image rhel6min --flavor m1.tiny --meta pattern=hill  mynotifitest
+
+sleep 30
+
+cat /tmp/myevents</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

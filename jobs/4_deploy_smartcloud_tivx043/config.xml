@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#set current environment
+
+#set current environment
+node_name=tivx043
+chef_env=tivx043
+#knife node delete $node_name -y || echo &apos;ignore&apos;
+#knife node from file /home/hill/hillenv/chef/nodes/${node_name}.json 
+#ssh -o StrictHostKeyChecking=no root@${node_name} &quot;rm -fr /var/chef/cache &amp;&amp; chef-client -n $node_name&quot; 
+
+
+##another way to use run list
+
+ssh -o StrictHostKeyChecking=no root@${node_name} &quot;rm -fr /root/.my.cnf || ip addr delete 9.115.77.193/26 dev brext || echo &apos;ignore&apos;&quot; 
+
+ssh -o StrictHostKeyChecking=no hillchef &quot;knife node delete $node_name -y -E hill || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no hillchef &quot;knife node delete $node_name -y -E $chef_env || echo &apos;ignore&apos;&quot;
+ssh -o StrictHostKeyChecking=no hillchef &quot;knife client delete $node_name -y -E $chef_env || echo &apos;ignore&apos;&quot;
+
+ssh -o StrictHostKeyChecking=no root@${node_name} &quot;rm /etc/chef/client.pem  ||  chef-client -E $chef_env &quot; 
+
+#ssh -o StrictHostKeyChecking=no hillchef &quot;knife node  run_list add $node_name &apos;role[kersrv-1],role[nova-smartcloud-compute]&apos; -E $chef_env&quot;
+ssh -o StrictHostKeyChecking=no hillchef &quot;knife node  run_list add $node_name &apos;role[nova-smartcloud-compute]&apos; -E $chef_env&quot;
+
+#ssh -o StrictHostKeyChecking=no hillchef &quot;knife node  run_list add $node_name &apos;role[allinone_mysql_smartcloud]&apos; -E $chef_env&quot;
+
+ssh -o StrictHostKeyChecking=no root@${node_name} &quot;rm -fr /var/chef/cache &amp;&amp; chef-client -E $chef_env&quot; </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>4_verify_smartcloud_tivx043</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

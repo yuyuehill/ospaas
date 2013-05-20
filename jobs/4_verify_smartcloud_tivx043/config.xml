@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=&quot;tivx043&quot;
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;service openstack-nova-api status&quot; 
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;service openstack-nova-network status&quot; 
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;service openstack-smartcloud status&quot; 
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;ps -ef | grep java&quot; 
+
+. /home/hill/openstack/keystonerc.$target_box 
+
+keystone user-list 
+keystone service-list
+keystone endpoint-list
+
+nova  network-list
+
+
+myflavor=`nova flavor-list | grep m1.hill | cut -d &apos;|&apos; -f 3`
+myflavor=`echo $myflavor` 
+if [ &quot;$myflavor&quot; != &quot;m1.hill&quot; ]; then
+    nova flavor-create  m1.hill 100 2048 0 1
+fi 
+
+#delete default network
+netuuid=`nova network-list | grep public | cut -d &apos;|&apos; -f 2 `
+netuuid=`echo $netuuid`
+
+
+if [ &quot;1$netuuid&quot; != &quot;1&quot; ]; then
+   ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; nova-manage network delete --uuid=${netuuid}&quot; 
+else
+   echo &quot;no network definition,create default&quot;
+fi
+
+
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;echo -e &apos;\n&apos; &gt;&gt;  /root/keystonerc&quot;
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;echo &apos;export VIL_PUBLIC_URL=http://9.123.106.32:9292&apos; &gt;&gt; /root/keystonerc&quot; 
+
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; /opt/ibm/openstack/iaas/smartcloud/bin/nova-cloud-show&quot; 
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; /opt/ibm/openstack/iaas/smartcloud/bin/nova-cloud-create tivx043 gemini  9.115.78.80 Administrator Passw0rd VMware&quot;
+ 
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; nova-manage network create --fixed_range_v4=9.111.102.176/26 --label=public --bridge=br0 --dns1=9.111.102.1 --dns2=9.111.102.1&quot; 
+
+osnet=`nova network-list | grep public | cut -d &apos;|&apos; -f 2 `
+osnet=`echo $osnet`
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; /opt/ibm/openstack/iaas/smartcloud/bin/nova-netext-show 9.115.78.80&quot; 
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;source /root/keystonerc &amp;&amp; /opt/ibm/openstack/iaas/smartcloud/bin/nova-netext-match 9.115.78.80 External $osnet&quot; 
+sleep 100
+
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;/opt/scripts/bvt_run_vm.sh win2k8r2ee hillwin&quot;
+ssh -o StrictHostKeyChecking=no root@${target_box} &quot;/opt/scripts/bvt_run_vm.sh RHEL6-converted hilllinux&quot;</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

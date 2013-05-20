@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx043
+
+#generate key cert local
+sudo  rm -fr /home/hill/myca
+sudo  mkdir -p /home/hill/myca 
+sudo  mkdir -p /home/hill/myca/signedcerts 
+sudo  mkdir -p /home/hill/myca/private
+sudo  cp /home/hill/openstack/ssl/* /home/hill/myca
+sudo  openssl req -x509 -newkey rsa:2048 -out /home/hill/myca/cacert.pem -outform PEM -days 1825 -nodes -config /home/hill/myca/caconfig.conf
+sudo  openssl x509 -in /home/hill/myca/cacert.pem -out /home/hill/myca/cacert.crt
+sudo  openssl req -newkey rsa:1024 -keyout /home/hill/myca/tempkey.pem -keyform PEM -out /home/hill/myca/tempreq.pem -outform PEM -nodes -config /home/hill/myca/keystone.conf
+sudo  mv /home/hill/myca/tempkey.pem /home/hill/myca/server_key.pem
+sudo  openssl ca -in /home/hill/myca/tempreq.pem -out /home/hill/myca/server_crt.pem -config /home/hill/myca/caconfig.conf -batch
+sudo  openssl x509 -in /home/hill/myca/server_crt.pem -out /home/hill/myca/middleware.pem
+sudo  sh -c &quot;cat /home/hill/myca/server_key.pem &gt;&gt; /home/hill/myca/middleware.pem&quot;
+sudo chown -R hill.hill /home/hill/myca
+
+
+ssh root@$target_box rm -fr /opt/myca
+scp -r /home/hill/myca root@$target_box:/opt
+
+
+#configure keystone
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf DEFAULT debug True&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf ssl enable True&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf ssl cert_required True&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf ssl certfile /opt/myca/server_crt.pem&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf ssl keyfile  /opt/myca/server_key.pem&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/keystone/keystone.conf ssl ca_certs /opt/myca/cacert.crt&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;service openstack-keystone restart&quot;
+
+#enable the port of keystone api
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --sport 5000 -j ACCEPT&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --sport 35357 -j ACCEPT&quot;
+
+
+#verify if it is able to connect to the security port 
+#verify public port
+sleep 5
+#curl -k https://$target_box:5000/
+
+#verify admin port
+#curl -k https://$target_box:35357/</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.python.Python>
+      <command>import httplib 
+import ssl
+
+client=&quot;/home/hill/myca/middleware.pem&quot;
+
+host=&quot;tivx043&quot;
+admin_port=35357
+public_port=5000
+
+conn = httplib.HTTPSConnection(host,admin_port,client, client)
+conn.request(&apos;GET&apos;,&apos;/&apos;)
+resp=conn.getresponse()
+
+print &quot;Get response from admin port with ssl &quot;,  resp.status
+
+conn = httplib.HTTPSConnection(host,public_port,client, client)
+conn.request(&apos;GET&apos;,&apos;/&apos;)
+resp=conn.getresponse()
+print &quot;Get response from public port with ssl &quot;,  resp.status
+</command>
+    </hudson.plugins.python.Python>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

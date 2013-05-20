@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx043
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install -y python-ordereddict&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;yum install smartcloud&quot;
+
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;cp -f /etc/nova/policy.json.bak  /etc/nova/policy.json&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT compute_driver smartcloud.virt.sce.driver.SmartCloudEntryDriver&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT osapi_compute_extension smartcloud.api.openstack.contrib.restapi.SmartCloud&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT sce_connection_hostname localhost&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT sce_connection_username admin&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT sce_connection_password admin&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT qpid_hostname localhost&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT qpid_port 5672&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT qpid_username anonymous&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/nova.conf DEFAULT smartcloud_sql_connection mysql://smartcloud:smartcloud@localhost/smartcloud?charset=utf8&quot;
+
+
+#update smart cloud configuration
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT debug True&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT compute_driver smartcloud.virt.sce.driver.SmartCloudEntryDriver&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT keystone_token ADMIN&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT smartcloud_topic smartcloud&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT smartcloud_default_tenant_name admin&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_connection_hostname localhost&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_connection_port 8080&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_connection_username admin&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_connection_password admin&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_hostname localhost&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_hostname localhost&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_port 5672&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_username annoymous&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_protocol tcp&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT sce_qpid_reconnection_interval 5&quot;
+
+#auth
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT admin_tenant_name admin&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT admin_user admin&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;openstack-config --set /etc/nova/smartcloud.conf DEFAULT admin_password admin&quot;
+
+
+scp /home/hill/openstack/conf/policy.json.sce root@$target_box:/etc/nova/policy.json
+
+#modify the python path for smartcloud sce driver
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;rm -fr /usr/lib/python2.6/site-packages/smartcloud &amp;&amp; ln -s /opt/ibm/openstack/iaas/smartcloud/smartcloud /usr/lib/python2.6/site-packages/smartcloud&quot;
+
+#create database 
+ssh -o StrictHostKeyChecking=no root@$target_box  &quot;mysql -u root -ppassw0rd -e &apos;drop database smartcloud&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box  &quot;mysql -u root -ppassw0rd -e &apos;create database smartcloud&apos;&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box  &quot;mysql -u root -ppassw0rd -e \&quot;grant ALL PRIVILEGES ON smartcloud.* to &apos;smartcloud&apos;@&apos;localhost&apos; identified by &apos;smartcloud&apos;\&quot;&quot;
+
+
+#db sync
+
+ssh -o StrictHostKeyChecking=no root@$target_box  &quot;cd /opt/ibm/openstack/iaas/smartcloud; bin/smartcloud-manage db sync&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;service openstack-nova-compute restart&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;service openstack-nova-api restart&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;cd /opt/ibm/openstack/iaas/smartcloud; nohup bin/nova-smartcloud 1&gt;&amp;2 &amp;&quot;</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

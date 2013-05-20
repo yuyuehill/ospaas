@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>target_box=tivx043
+
+#kill skc process if exists
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;#!/bin/bash&apos; &gt; /tmp/killskc&quot;
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;if [ $(pgrep skc) ]; then kill -9 $(pgrep skc); fi&apos; &gt;&gt; /tmp/killskc&quot;
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;if [ $(pgrep java) ]; then kill -9 $(pgrep java); fi&apos; &gt;&gt; /tmp/killskc&quot;
+#ssh -o StrictHostKeyChecking=no root@$target_box &quot;chmod +x /tmp/killskc&quot;
+#ssh -o StrictHostKeyChecking=no root@$target_box /tmp/killskc
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;pkill skc&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;pkill java&quot;
+
+#remove sce if installed
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;if [ -f /root/SmartCloud_Entry_24/UninstallSCE ]; then /root/SmartCloud_Entry_24/UninstallSCE -i silent; fi&quot;
+
+#generate installer properties
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_INSTALL_FOLDER=/opt/ibm&apos;  &gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_PROP_FILE_FOLDER=/root&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_SHORTCUTS=/root/SmartCloud_Entry_24&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_LINK_CREATION_1=0&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_LINK_CREATION_2=0&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_LINK_CREATION_3=0&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;CHOSEN_INSTALL_FEATURE_LIST=App,Prop&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;CONFIG_PROP_SILENT=1&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_INPUT_AUTHENTICATION_1=admin&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_INPUT_AUTHENTICATION_2=SmartCloud Entry Administrtor&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo &apos;USER_INPUT_ADMIN_PASS=admin&apos;  &gt;&gt; /tmp/sce_installer.properties&quot;
+
+#slient install
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;chmod +x /opt/scp_build/sce/sce240_linux_installer.bin&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;/opt/scp_build/sce/sce240_linux_installer.bin -f  /tmp/sce_installer.properties -i silent; echo &apos;success&apos;&quot;
+
+#modify the messaging files
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.enabled=true&apos;  &gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.hostname=localhost&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.username=annonymous&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.ssl.enabled=false&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.port=5672&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.topic=sce&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.qpid.virtualhost=/&apos;&gt; /root/.SCE24/messaging.properties&quot;
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;echo  &apos;com.ibm.cfs.messaging.qpid.clientid=sce_messaging&apos;&gt; /root/.SCE24/messaging.properties&quot;
+
+
+
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;export JAVA_HOME=/opt/IBM/SCE24/jre;export PATH=$JAVA_HOME/bin:$PATH; cd /opt/ibm/SCE24; nohup ./skc  1&gt;&amp;2 &amp;&quot;
+
+#the port of sce
+ssh -o StrictHostKeyChecking=no root@$target_box &quot;iptables -I INPUT 1 -p tcp --dport 8080 -j ACCEPT&quot;</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
