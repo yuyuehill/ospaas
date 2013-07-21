@@ -5,6 +5,7 @@ Created on Apr 12, 2013
 '''
 
 
+
 possibilities=[18,21,36]
 
 for i in range(11,100):
