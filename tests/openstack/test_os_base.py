@@ -28,6 +28,7 @@ class  TestOpenStackBase(unittest.TestCase):
     
     GEMINI =  {'url':'9.115.78.63:5000'  , 'username' :'admin', 'password':'admin', 'tenant':'admin'}
 
+    CLOUDOE =  {'url':'9.111.221.21:5000'  , 'username' :'admin', 'password':'admin', 'tenant':'admin'}
     
     #get the service from keystone
     def setUp(self):
