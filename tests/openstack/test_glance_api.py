@@ -14,7 +14,7 @@ class  TestGlance(test_os_base.TestOpenStackBase):
    
     def setUp(self):
         
-        self.env = self.TIVX013
+        self.env = self.CLOUDOE
         test_os_base.TestOpenStackBase.setUp(self)
         
     
@@ -33,9 +33,11 @@ class  TestGlance(test_os_base.TestOpenStackBase):
         
         return dd
     
+   
     def test_images(self):
         
         #dd = self.__create_image(10);
-        print len(self.index_images()['images'])
-        
+        print len(self.__index_images()['images'])
+    
+ 
         

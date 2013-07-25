@@ -17,7 +17,7 @@ class TestQpid(unittest.TestCase):
 
     def testDateTime(self):
     
-        broker =  "172.16.100.176:5672"
+        broker =  "172.16.2.53:5672"
         topic = "amq.topic"
         connection = Connection(broker)
         try:
