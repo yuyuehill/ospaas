@@ -20,7 +20,7 @@ class TestQpid(unittest.TestCase):
     
         broker =  "tivx013:5672"
         topic = "amq.topic"
-        connection = Connection(broker, reconnect=True)
+        connection = Connection(broker, reconnect=True,heartbeat=10)
         try:
             connection.open()
             session = connection.session()
