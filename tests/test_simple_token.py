@@ -36,11 +36,11 @@ class TestSimpleToken(unittest.TestCase):
 
     def test_encrypt(self):
         
-        key = base64.b64decode("EzzNhXb17ZsOu9j18Ek7jg==")
+        key = base64.b64decode("JLQAGzg0jju4PW0ty3jKFw==")
         
         #text = '{"username": "test", "expiration": 1355854311344.885}';
         
-        text = "{'username': 'test', 'expiration': 1355854311344.885}"
+        text = "{'username': 'admin', 'expiration': 1355854311344.885}"
         self.key = key
 
         enc= self._encrypt(text)
@@ -53,7 +53,16 @@ class TestSimpleToken(unittest.TestCase):
         
         print 'decrpty',raw
         
+    def test_decrypt(self):
+        key = base64.b64decode("JLQAGzg0jju4PW0ty3jKFw==")
+        print 'key is %s' % key
+        self.key=key
         
+        token='+jeRFU5xCMi7DquRjEKWS69WnY/tMWfj0zARBu7/OLXoUGRwgwRWadb8dngt8j1/fjrGY3aetyddqqTHXaB/cceJISI1mKSV68oAUq/GBhM='
+        
+        raw = self._decrypt(token)
+        
+        print "descrpt  %s" % raw
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
