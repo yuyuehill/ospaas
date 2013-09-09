@@ -16,7 +16,7 @@ import urlparse
 
 class  TestIaasGatewayBase(unittest.TestCase): 
     
-    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'passw0rd', 'tenant':'admin'}
+    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin'}
     
    
     #get the service from keystone
@@ -27,34 +27,24 @@ class  TestIaasGatewayBase(unittest.TestCase):
         print providers
         
         #get the endpoints of keystone
-               
+        ksurl=providers["serviceCatalog"][0]["endpoints"][0]["publicURL"]
+        print "ks url %s" % ksurl       
           
         body = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['password'],self.env['tenant'])
-        print body
-        
+                
         headers= {"Content-Type":"application/json"}
         
         
-        catalog=json.loads(self.__do_post( url, body, headers))
+        catalog=json.loads(self.__do_post(ksurl+"/tokens", body, headers))
 
-        self.conn = httplib.HTTPConnection()
-     
-        self.conn.request("POST","/v2.0/tokens",params,headers)
-       
-        response = self.conn.getresponse()
+        print "service catalog is %s " % catalog        
         
-        data = response.read()
-        
-        print "Got reponse %s" % data
-        dd = json.loads(data)
-        
-        
-        self.apitoken = dd['access']['token']['id']
+        self.apitoken = catalog['access']['token']['id']
         
     
-        self.tenant_id = dd['access']['token']['tenant']['id']
+        self.tenant_id = catalog['access']['token']['tenant']['id']
         
-        for service in dd['access']['serviceCatalog']:
+        for service in catalog['access']['serviceCatalog']:
             if service['type'] == 'volume':
                 print "cinder endpoints " , service['endpoints']
                 self.cinder_endpoints = service['endpoints']
@@ -75,23 +65,26 @@ class  TestIaasGatewayBase(unittest.TestCase):
         if (self.conn != None):
              self.conn.close()
                
-    def __do_post(self,url,path,body,header):
-        if (self.conn == None):
-            conn = httplib.HTTPConnection(urlparse(url).netloc)
+    def __do_post(self,url,body,header):
+        urlobj=urlparse.urlparse(url)
         
-        conn.request("POST",path, body, header)
+        if (self.conn == None):
+            conn = httplib.HTTPConnection(urlobj.netloc)
+        
+        conn.request("POST",urlobj.path, body, header)
         response = conn.getresponse()
         data = response.read()
         return data
     
     def __do_get(self,url):
+        urlobj=urlparse.urlparse(url)
         if(self.conn == None ):
             print "create connection %s " % url 
-            conn =  httplib.HTTPConnection(urlparse(url).netloc)
-        path=urlparse(url).path
-        conn.request("GET",path)
+            conn =  httplib.HTTPConnection(urlobj.netloc)
+       
+        conn.request("GET",urlobj.path)
         response = conn.getresponse()
-        print "doGet %s response %s" %(path,response.status)
+        print "doGet %s response %s" %(urlobj.path,response.status)
         data = response.read()
         return data
     
@@ -122,10 +115,43 @@ class  TestIaasGatewayBase(unittest.TestCase):
         else:
             dd = json.loads(data)
             
-        self.conn.close()
+        if api_conn :   
+            api_conn.close()
         
         return dd
     
+    def __call_api_put_file(self,endpoints,path,file_name):
+        
+        for endpoint in endpoints:
+            public_url = endpoint["publicURL"]
+            scheme, netloc, rootpath, query, frag = urlparse.urlsplit(public_url)
+        
+        print scheme,netloc,rootpath,query,frag  
+        
+        if netloc.split(':')[0] == 'localhost':
+            netloc = self.env['url'].split(':')[0] + ":" + netloc.split(':')[1]
+        
+        api_conn =  httplib.HTTPConnection(netloc)
+        headers = {"Content-Type":"application/octet-stream","x-auth-token":self.apitoken }
+        print "headers",headers,"path", rootpath + path
+        
+        api_conn.request("PUT",rootpath + path, file(file_name),headers)
+        
+        response = api_conn.getresponse()
+        
+        data = response.read()
+        
+        print "Got reponse %s" % data
+        
+        if data is None or data == "":
+            dd = {}
+        else:
+            dd = json.loads(data)
+            
+        if api_conn :   
+            api_conn.close()
+        
+        return dd
     
     def call_cinder_api(self,method,path,params):
         return self.__call_api(self.cinder_endpoints,method,path,params)
@@ -139,6 +165,9 @@ class  TestIaasGatewayBase(unittest.TestCase):
 
     def call_glance_api(self,method,path,params):
         return self.__call_api(self.glance_endpoints,method,path,params)
+        
+    def call_glance_api_put_file(self,path,data):
+        return self.__call_api_put_file(self.glance_endpoints,path,data)
         
     def call_keystone_admin_api(self,method,path,params):
         return self.__call_api(self.keystone_endpoints,method,path,params,urltype='adminURL')    
