@@ -15,45 +15,43 @@ class  TestNova(test_os_base.TestOpenStackBase):
    
     def setUp(self):
         
-        self.env = self.GEMINI
+        self.env = self.TIVX013
         test_os_base.TestOpenStackBase.setUp(self)
         
     
     def list_extends(self):
-        params = json.dumps({})        
-        dd = self.call_nova_api('GET', '/extensions', params)
+              
+        dd = self.call_nova_api('GET', '/extensions', None)
         return dd
     
     
     def list_flavors(self):
         params = json.dumps({})
-        dd = self.call_nova_api('GET', '/flavors', params)
+        dd = self.call_nova_api('GET', '/flavors', None)
         return dd
     
     def list_images(self):
-        params = json.dumps({})
-        dd = self.call_nova_api('GET', '/images', params)
+        
+        dd = self.call_nova_api('GET', '/images', None)
         return dd
     
     def list_servers(self, server_id):
-        params = json.dumps({})
+        
         if server_id is None:
-            dd = self.call_nova_api('GET', '/servers', params)
+            dd = self.call_nova_api('GET', '/servers', None)
             return dd['servers']
         else:
-            dd = self.call_nova_api('GET', '/servers/%s' % server_id, params)
+            dd = self.call_nova_api('GET', '/servers/%s' % server_id, None)
             return dd['server']
         
     def list_networks(self):
         
-        params = json.dumps({})
-        
         #if quantum used as network service
         if self._dict.has_key('quantum_endpoints') :
-            dd = self.call_quantum_api('GET', '/networks', params)
+            dd = self.call_quantum_api('GET', '/networks', None)
             return dd
         else:
-            dd = self.call_nova_api('GET', '/os-networks', params)
+            dd = self.call_nova_api('GET', '/os-networks', None)
             return dd
                                         
       
@@ -114,7 +112,7 @@ class  TestNova(test_os_base.TestOpenStackBase):
     
     def delete_server(self, server_id):
         server_params = json.dumps({})
-        self.call_nova_api('DELETE', '/servers/%s' % server_id, server_params)
+        self.call_nova_api('DELETE', '/servers/%s' % server_id, None)
         return {"id":server_id} 
        
     #test extends    

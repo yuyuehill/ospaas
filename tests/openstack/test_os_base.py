@@ -87,6 +87,8 @@ class  TestOpenStackBase(unittest.TestCase):
         api_conn =  httplib.HTTPConnection(netloc)
         headers = {"Content-Type":"application/json","x-auth-token":self.apitoken }
         print "headers",headers,"method",method,"path", rootpath + path, "params", params
+       
+        
         api_conn.request(method,rootpath + path, params, headers)
         
         response = api_conn.getresponse()
