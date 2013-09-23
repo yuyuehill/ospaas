@@ -110,6 +110,24 @@ class  TestNova(test_os_base.TestOpenStackBase):
         dd = self.call_nova_api('POST', '/servers', server_params)
         return dd['server']
     
+    def create_server_with_network(self,image_uri,flavor_uri, net_id, ip):
+        server_params = json.dumps({
+                            'server' : {
+                                        'flavorRef':flavor_uri,
+                                        'imageRef':image_uri,
+                                        'metadata': {'owner':'hill'} ,
+                                        'name':'hill_server_%d' % random.randint(1, 10000),
+                                        'networks': [
+                                                     {"uuid":net_id,
+                                                      "fixed_ip": ip}
+                                                     ]
+                                        }
+                            }
+                         )
+        
+        dd = self.call_nova_api('POST', '/servers', server_params)
+        return dd['server']
+        
     def delete_server(self, server_id):
         server_params = json.dumps({})
         self.call_nova_api('DELETE', '/servers/%s' % server_id, None)
@@ -123,7 +141,7 @@ class  TestNova(test_os_base.TestOpenStackBase):
             print "name", extension["name"]
     
     #test servers        
-    def test_server(self):
+    def _test_server(self):
        
         flavor_name, flavor_ref = self.get_flavor()
         image_name, image_ref = self.get_image()
@@ -154,6 +172,36 @@ class  TestNova(test_os_base.TestOpenStackBase):
                 print 'wait for next turn %d' % x
                 time.sleep(5)  
         
+    def test_server_with_network(self):
+       
+        flavor_name, flavor_ref = self.get_flavor()
+        image_name, image_ref = self.get_image()
+        
+        self.assertFalse(image_name is None, "failed to get image name")
+        self.assertFalse(image_ref is None, "failed to get image ref")
+        
+        #boot server
+        dd = self.create_server_with_network(image_ref, flavor_ref, 'ebc80703-7b7e-4d3c-8acd-343b21b83ece', '172.16.0.5')
+        
+        #update meta data
+        self.update_meta_data(dd['id'])
+                
+        #check the status
+        for x in range(100):
+            #get the status of the created volume until it is available or error
+            server = self.list_servers(dd['id'])
+            
+            if server['status'] == 'ACTIVE':
+                print server 
+                #self.delete_server(dd['id'])
+                break
+            elif server['status'] == 'ERROR':
+                #self.delete_server(dd['id'])
+                break
+            
+            else:
+                print 'wait for next turn %d' % x
+                time.sleep(5)  
      
         
         
