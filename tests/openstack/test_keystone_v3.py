@@ -10,7 +10,7 @@ import json
 
 class Test(unittest.TestCase):
 
-    TIVX043 = {'url':'tivx043:5000', 'username':'admin' , 'password':'admin' , 'tenant':'admin','domain':'deFault'}
+    TIVX043 = {'url':'tivx043:5000', 'adminurl':'tivx013:35357','username':'admin' , 'password':'admin' , 'tenant':'admin','domain':'Default'}
     def setUp(self):
         
         self.env = self.TIVX043
@@ -50,7 +50,29 @@ class Test(unittest.TestCase):
         data = response.read()
         
         print "Got reponse %s" % data
-        dd = json.loads(data)
+        
+        #get the subject token
+        headers = response.getheaders()
+        for header in headers:
+            if header[0] == "x-subject-token":
+               self.apitoken = header[1]
+               
+        headers= {"Content-Type":"application/json", "X-Auth-Token":self.apitoken}
+
+        self.conn.request("GET","/v3/tenants",None,headers)
+        response = self.conn.getresponse()
+        print "Get response %s " % response.read()
+
+        
+        self.conn.request("GET","/v3/projects",None,headers)
+        response = self.conn.getresponse()
+        print "Get response %s " % response.read()
+
+        
+        self.conn = httplib.HTTPConnection(self.env['adminurl'])
+        self.conn.request("GET","/v3/endpoints",None,headers)
+        response = self.conn.getresponse()
+        print "Get response %s " % response.read()
         self.conn.close()
 
         

@@ -16,55 +16,104 @@ import urlparse
 
 class  TestIaasGatewayBase(unittest.TestCase): 
     
-    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin'}
-    
+    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin', 'domain':"Default"}
    
     #get the service from keystone
     def setUp(self):
         self.conn = None     
         #get providers
         providers = json.loads(self.__do_get(self.env['url']+"/providers"))
-        print providers
-        
+        print "providers ===== %s " % providers
+        ksendpoint=providers["serviceCatalog"][0]["endpoints"]
+        print "endpoints ===== %s " % ksendpoint
         #get the endpoints of keystone
-        ksurl=providers["serviceCatalog"][0]["endpoints"][0]["publicURL"]
-        print "ks url %s" % ksurl       
+        for endpoint in  ksendpoint:
+            if endpoint["interface"] == "public":
+                ksurl= endpoint["url"]                     
+            if endpoint["interface"] == "admin":
+                ksadminurl=endpoint["url"]           
+        
+        print "ks url %s  ksadmin url %s " % (ksurl,ksadminurl)       
           
-        body = '{"auth":{"passwordCredentials":{"username":\"%s\","password":\"%s\"},"tenantName":\"%s\"}}' %(self.env['username'],self.env['password'],self.env['tenant'])
+        body = self._get_auth_info_v3() 
                 
         headers= {"Content-Type":"application/json"}
         
+        users,headers=self.__do_post(ksurl+"/auth/tokens", body, headers)
+        for header in headers:
+            if header[0] == "x-subject-token":
+               self.apitoken = header[1]
+               
+        #get the tokens
+        print "get tokens %s  %s  token=%s " % (users,headers,self.apitoken )  
         
-        catalog=json.loads(self.__do_post(ksurl+"/tokens", body, headers))
-
-        print "service catalog is %s " % catalog        
+        services = self.__call_api(ksendpoint,"GET","/services",  None,"admin")
+        print "====get services %s " % services
+        endpoints = self.__call_api(ksendpoint,"GET","/endpoints",None,"admin")
+        print "===get endpoints %s " % endpoints
         
-        self.apitoken = catalog['access']['token']['id']
-        
-    
-        self.tenant_id = catalog['access']['token']['tenant']['id']
-        
-        for service in catalog['access']['serviceCatalog']:
-            if service['type'] == 'volume':
-                print "cinder endpoints " , service['endpoints']
-                self.cinder_endpoints = service['endpoints']
-            elif service['type'] == 'compute':
-                print "compute endpoints", service['endpoints'] 
-                self.nova_endpoints = service['endpoints']
-            elif service['type'] == 'image':
-                print "image endpoints",service['endpoints']
-                self.glance_endpoints = service['endpoints'] 
-            elif service['type'] == 'network':
-                print 'network endpoints', service['endpoints']
-                self.quantum_endpoints = service['endpoints']
-            elif service['type'] == 'identity':
-                print 'identify endpoints', service['endpoints']
-                self.keystone_endpoints = service['endpoints']
+        #parse the endpoints from services list        
+        self._get_endpoints_v3(services, endpoints)
     
     def tearDown(self):
         if (self.conn != None):
-             self.conn.close()
+            self.conn.close()
                
+    def _is_service(self,service_id,services,type):
+        for service in services["services"]:
+            if service["type"] == type and service["id"] == service_id:
+                return True
+        return False             
+        
+    def _get_endpoints_v3(self,services,endpoints):
+        
+        self.cinder_endpoints = []
+        self.nova_endpoints = []
+        self.glance_endpoints = []
+        self.keystone_endpoints = []
+        
+        for endpoint in endpoints["endpoints"]:
+            print "endpiont %s " % endpoint
+            if  self._is_service(endpoint["service_id"], services,'volume'):
+                print "cinder endpoints " , endpoint['links']
+                self.cinder_endpoints.append(endpoint)
+            elif self._is_service(endpoint["service_id"], services,'compute'):
+                print "compute endpoints", endpoint['links'] 
+                self.nova_endpoints.append(endpoint)
+            elif self._is_service(endpoint["service_id"], services,'image'):
+                print "image endpoints",endpoint['links']
+                self.glance_endpoints.append(endpoint) 
+            elif self._is_service(endpoint["service_id"], services,'network'):
+                print 'network endpoints', endpoint['links']
+                self.quantum_endpoints.append(endpoint)
+            elif self._is_service(endpoint["service_id"], services,'identity'):
+                print 'identify endpoints', endpoint['links']
+                self.keystone_endpoints.append(endpoint)
+                
+    
+    def _get_auth_info_v3(self):
+        params = '''
+        {
+            "auth": {
+                "identity": {
+                    "methods": [
+                        "password"
+                    ],
+                    "password": {
+                        "user": {
+                            "domain": {
+                                "name": "%s"
+                            },
+                            "name": "%s",
+                            "password": "%s"
+                        }
+                    }
+                }
+            }
+         }
+        ''' % (self.env["domain"],self.env["username"],self.env["password"])
+        return params
+     
     def __do_post(self,url,body,header):
         urlobj=urlparse.urlparse(url)
         
@@ -73,8 +122,9 @@ class  TestIaasGatewayBase(unittest.TestCase):
         
         conn.request("POST",urlobj.path, body, header)
         response = conn.getresponse()
+        
         data = response.read()
-        return data
+        return data, response.getheaders()
     
     def __do_get(self,url):
         urlobj=urlparse.urlparse(url)
@@ -88,19 +138,19 @@ class  TestIaasGatewayBase(unittest.TestCase):
         data = response.read()
         return data
     
-    def __call_api(self,endpoints,method,path,params, urltype='publicURL' ):
+    def __call_api(self,endpoints,method,path,params, urltype='public' ):
         
         for endpoint in endpoints:
-            public_url = endpoint[urltype]
-            scheme, netloc, rootpath, query, frag = urlparse.urlsplit(public_url)
+            if endpoint["interface"] == urltype:
+                scheme, netloc, rootpath, query, frag = urlparse.urlsplit(endpoint["url"])
         
-        print scheme,netloc,rootpath,query,frag  
+        print scheme,netloc,rootpath,query,frag
         
         if netloc.split(':')[0] == 'localhost':
             netloc = self.env['url'].split(':')[0] + ":" + netloc.split(':')[1]
         
         api_conn =  httplib.HTTPConnection(netloc)
-        headers = {"Content-Type":"application/json","x-auth-token":self.apitoken }
+        headers = {"Content-Type":"application/json","X-Auth-Token":self.apitoken,"X-Subject-Token": self.apitoken ,"Vary":"X-Auth-Token,X-Subject-Token" }
         print "headers",headers,"method",method,"path", rootpath + path, "params", params
         api_conn.request(method,rootpath + path, params, headers)
         
