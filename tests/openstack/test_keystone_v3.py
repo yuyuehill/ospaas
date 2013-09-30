@@ -59,7 +59,7 @@ class Test(unittest.TestCase):
                
         headers= {"Content-Type":"application/json", "X-Auth-Token":self.apitoken}
 
-        self.conn.request("GET","/v3/tenants",None,headers)
+        self.conn.request("GET","/v3/users",None,headers)
         response = self.conn.getresponse()
         print "Get response %s " % response.read()
 
