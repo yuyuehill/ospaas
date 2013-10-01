@@ -17,7 +17,7 @@ import urlparse
 class  TestIaasGatewayBase(unittest.TestCase): 
     
     TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin', 'domain':"Default"}
-   
+    RTP = {'url':'http://172.17.43.49:9973', 'username':'admin', 'password':'passw0rd', 'tenant':'admin', 'domain':"Default"}
     #get the service from keystone
     def setUp(self):
         self.conn = None     
@@ -106,6 +106,14 @@ class  TestIaasGatewayBase(unittest.TestCase):
                             },
                             "name": "%s",
                             "password": "%s"
+                        }
+                    },
+                    "scope":{
+                        "project":{
+                            "domain":{
+                               "name":"Default"
+                            },
+                            "name":"admin"
                         }
                     }
                 }

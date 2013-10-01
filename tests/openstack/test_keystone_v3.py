@@ -11,9 +11,11 @@ import json
 class Test(unittest.TestCase):
 
     TIVX043 = {'url':'tivx043:5000', 'adminurl':'tivx013:35357','username':'admin' , 'password':'admin' , 'tenant':'admin','domain':'Default'}
+    RTP = {'url':'172.17.43.48:5000', 'adminurl':'172.17.43.48:35357','username':'admin' , 'password':'passw0rd' , 'tenant':'admin','domain':'Default'}
+    
     def setUp(self):
         
-        self.env = self.TIVX043
+        self.env = self.RTP
   
 
     def test_auth_token(self):
@@ -31,6 +33,14 @@ class Test(unittest.TestCase):
                             },
                             "name": "%s",
                             "password": "%s"
+                        }
+                    },
+                    "scope":{
+                        "project":{
+                            "domain":{
+                               "name":"Default"
+                            },
+                            "name":"admin"
                         }
                     }
                 }

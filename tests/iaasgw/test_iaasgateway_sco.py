@@ -16,7 +16,7 @@ class TestGWSCOKeystoneFunctions(test_gw_base.TestIaasGatewayBase):
 
 
     def setUp(self):
-        self.env =  self.TIVX013
+        self.env =  self.RTP
         test_gw_base.TestIaasGatewayBase.setUp(self)
 
 
