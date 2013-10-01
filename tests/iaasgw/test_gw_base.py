@@ -40,6 +40,7 @@ class  TestIaasGatewayBase(unittest.TestCase):
         headers= {"Content-Type":"application/json"}
         
         users,headers=self.__do_post(ksurl+"/auth/tokens", body, headers)
+        
         for header in headers:
             if header[0] == "x-subject-token":
                self.apitoken = header[1]
@@ -107,14 +108,14 @@ class  TestIaasGatewayBase(unittest.TestCase):
                             "name": "%s",
                             "password": "%s"
                         }
-                    },
-                    "scope":{
-                        "project":{
-                            "domain":{
-                               "name":"Default"
-                            },
-                            "name":"admin"
-                        }
+                    }
+                },
+                "scope":{
+                    "project":{
+                        "domain":{
+                            "name":"Default"
+                         },
+                        "name":"admin"
                     }
                 }
             }

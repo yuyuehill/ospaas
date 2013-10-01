@@ -34,15 +34,15 @@ class Test(unittest.TestCase):
                             "name": "%s",
                             "password": "%s"
                         }
-                    },
-                    "scope":{
+                    }
+                },
+                "scope":{
                         "project":{
                             "domain":{
                                "name":"Default"
                             },
                             "name":"admin"
                         }
-                    }
                 }
             }
          }
