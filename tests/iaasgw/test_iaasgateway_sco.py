@@ -11,7 +11,7 @@ import json
 import test_gw_base
 
 
-class TestGWSCOKeystoneFunctions(test_gw_base.TestIaasGatewayBase):
+class TestGWSCOFunctions(test_gw_base.TestIaasGatewayBase):
 
 
 
@@ -30,6 +30,16 @@ class TestGWSCOKeystoneFunctions(test_gw_base.TestIaasGatewayBase):
         result = self.call_keystone_api("GET",path,None)
         return result
         
+    def list_flavors(self):
+        path="/flavors/detail"
+        result = self.call_nova_api("GET",path,None)
+        return result;
+    
+    def show_hypervisor(self):
+        path = "/os-hypervisors/1"
+        result = self.call_nova_api("GET",path,None)
+        return result;
+
     def tearDown(self):
         pass
 
@@ -40,7 +50,14 @@ class TestGWSCOKeystoneFunctions(test_gw_base.TestIaasGatewayBase):
         ret=self.list_domains()
         print "domains %s " % ret
         
-    
+    def testnova(self):
+        #r
+        ret = self.list_flavors()
+        print "flavor %s" % ret
+        
+        ret = self.show_hypervisor()
+        print "hyperviosr %s " % ret
+        
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testGlancePost']

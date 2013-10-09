@@ -16,8 +16,8 @@ import urlparse
 
 class  TestIaasGatewayBase(unittest.TestCase): 
     
-    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin', 'domain':"Default"}
-    RTP = {'url':'http://172.17.43.49:9973', 'username':'admin', 'password':'passw0rd', 'tenant':'admin', 'domain':"Default"}
+    TIVX013 = {'url':'http://tivx013:9973', 'username':'admin', 'password':'admin', 'tenant':'admin', 'domain':"Default","tenant_id":""}
+    RTP = {'url':'http://172.17.43.49:9973', 'username':'admin', 'password':'passw0rd', 'tenant':'admin', 'domain':"Default","tenant_id":""}
     #get the service from keystone
     def setUp(self):
         self.conn = None     
@@ -40,6 +40,7 @@ class  TestIaasGatewayBase(unittest.TestCase):
         headers= {"Content-Type":"application/json"}
         
         users,headers=self.__do_post(ksurl+"/auth/tokens", body, headers)
+        
         for header in headers:
             if header[0] == "x-subject-token":
                self.apitoken = header[1]
@@ -52,6 +53,13 @@ class  TestIaasGatewayBase(unittest.TestCase):
         endpoints = self.__call_api(ksendpoint,"GET","/endpoints",None,"admin")
         print "===get endpoints %s " % endpoints
         
+        projects = self.__call_api(ksendpoint,"GET","/projects",None,"admin")
+        print "===get projects %s " % projects
+        
+        for project in projects["projects"]:
+            if project["name"] == self.env["tenant"]:
+                self.env["tenant_id"]=project["id"]
+            
         #parse the endpoints from services list        
         self._get_endpoints_v3(services, endpoints)
     
@@ -107,14 +115,14 @@ class  TestIaasGatewayBase(unittest.TestCase):
                             "name": "%s",
                             "password": "%s"
                         }
-                    },
-                    "scope":{
-                        "project":{
-                            "domain":{
-                               "name":"Default"
-                            },
-                            "name":"admin"
-                        }
+                    }
+                },
+                "scope":{
+                    "project":{
+                        "domain":{
+                            "name":"Default"
+                         },
+                        "name":"admin"
                     }
                 }
             }
@@ -150,9 +158,13 @@ class  TestIaasGatewayBase(unittest.TestCase):
         
         for endpoint in endpoints:
             if endpoint["interface"] == urltype:
-                scheme, netloc, rootpath, query, frag = urlparse.urlsplit(endpoint["url"])
+                converted_url = endpoint["url"]
+                if endpoint["url"].find("tenant_id") != -1:
+                    converted_url = endpoint["url"] % self.env
+                scheme, netloc, rootpath, query, frag = urlparse.urlsplit(converted_url)
+                    
         
-        print scheme,netloc,rootpath,query,frag
+        print "call_api with",scheme,netloc,rootpath,query,frag
         
         if netloc.split(':')[0] == 'localhost':
             netloc = self.env['url'].split(':')[0] + ":" + netloc.split(':')[1]
